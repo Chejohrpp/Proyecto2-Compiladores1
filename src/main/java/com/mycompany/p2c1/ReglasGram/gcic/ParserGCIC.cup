@@ -1,0 +1,516 @@
+/*codigo de usuario*/
+package com.mycompany.p2c1.ReglasGram.gcic;
+import com.mycompany.p2c1.ReglasGram.Token;
+import java_cup.runtime.*;
+import com.mycompany.p2c1.ReglasGram.gcic.symGCIC.*;
+import java.util.ArrayList;
+import java.util.List;
+
+parser code {:
+
+
+	private List<String> listaErrores;
+
+	public ParserGCIC(LexerGCIC lex){
+		super(lex);
+		listaErrores = new ArrayList<String>();
+	}
+	public void syntax_error(Symbol cur_token){
+			String nombreSimbolo = symbl_name_from_id(cur_token.sym);
+            Token token = (Token) cur_token.value;
+            String tokenEsperados = "Tokens esperados: ";
+            for (Integer expected_token_id : expected_token_ids()) {
+            	if(!symbl_name_from_id(expected_token_id).equals("error")){
+            		//System.out.println("Tokens Esperados: " + symbl_name_from_id(expected_token_id));
+            		tokenEsperados += symbl_name_from_id(expected_token_id) + " ";
+            	}                
+            }
+			String msgError =  "Error: ( "+ token.getLexema() +" ) -> {Linea: "+cur_token.left+", Columna: "+ cur_token.right +" } " + tokenEsperados;
+			listaErrores.add(msgError);
+	}
+
+	public void report_fatal_error(String message, Object info){
+			String Elerror = "Ocurrio un error no recuperable al analizar: " + message + " -> {objeto: " + info + "}";
+			listaErrores.add(Elerror);	
+	}
+
+	public List getListaErrores(){
+		return listaErrores;
+	}
+	protected int error_sync_size(){
+		return 1;
+	}
+:}
+
+/*terminales*/
+terminal Token MENQ, C_GCIC, CORI, PARAMETRO, IGUAL;
+terminal Token STRING, STRING_WS, CORD,MAQ, DIAG;
+terminal Token C_HEAD,C_LINK,C_TITLE,STRING_TOTAL,ID_VARIABLE,C_BODY;
+terminal Token C_SPAM, C_INPUT,C_TEXTAREA,C_SELECT,C_OPTION,C_DIV,C_IMG,C_BR,C_BUTTON,C_H1,C_P,C_SCRIPTING;
+terminal Token ON_LOAD,NOMBRE_FUNCION,PAI,PAD,INSERTAR,LLAI, LLAD;
+terminal Token DOS_PUNTOS,COMA,ADMIRACION,SEMI,BARRA90,AND_1;
+terminal Token SUMA, MENOS, MULT,INSERT,GET_ELEMENT_BY_ID,IGUALACION,MEN_QUE,MAY_QUE,DIFERENTE;
+terminal Token CHAR,ENTERO,DECIMAL,BOOLEAN,INVALID;
+terminal Token ASC,DESC,LETPAR_NUM,LETIMPAR_NUM,REVERSE,CARACTER_ALEATORIO,NUM_ALEATORIO;
+terminal Token ALERT_INFO,EXIT,GLOBAL,ID_INTEGER,ID_STRING,ID_BOOLEAN,ID_DECIMAL,ID_CHAR;
+terminal Token IF,ELSE,THEN,INIT,END,REPEAT,HUNTIL,WHILE;
+terminal Token THENWHILE, ID_ELEMENT;
+
+
+/*no terminales*/
+non terminal Token inicio,etiqueta_gcic,inicio_gcic,parametros_etiquetas,varios_parametro_etiqueta;
+non terminal Token parametro_etiqueta,inicio_param_etiq,string;
+non terminal Token fin_param_etiq,cierre_etiqueta,fin_etiqueta_gcic,pre_fin_etiq,cierre_gcic,head,etiqueta_head,inicio_head;
+non terminal Token fin_etiqueta_head,cierre_head,link,etiqueta_link,inicio_link,fin_etiqueta_link,cierre_link,title;
+non terminal Token etiqueta_title,inicio_title,fin_etiqueta_title,cierre_title,cont_etiqueta,varios_contenido,todo_contenido,cont_head;
+non terminal Token etiquetas_para_head,etiqueta_para_head,body,etiqueta_body,inicio_body;
+non terminal Token fin_etiqueta_body,cierre_body,cont_body,etiquetas_para_body,etiqueta_para_body;
+non terminal Token c_etiqueta_g,etq_generica;
+non terminal Token etiqueta_g,inicio_g, fin_etiqueta_g,cierre_g;
+non terminal Token etiqueta_br,inicio_br,scripting,etiqueta_scripting,inicio_scripting,fin_etiqueta_scripting;
+non terminal Token cierre_scripting,cont_scripting,funciones,functions,on_load,process_,funcion_on_load,name_on_load,parentesis;
+non terminal Token funcion_process_,name_funcion_g,cont_funcion,inicio_funcion,fin_funcion,funcion,tipos_instrucciones,tipo_instruccion;
+non terminal Token expr_list, expr,estruc_init,inicio_init,el_init,fin_estruct,ini_estruct;
+non terminal Token declaracion_asginacion,fin_instruccion;
+non terminal Token declaracion,tipo_dato,modo,nombre_variable,otras_variables,otra_variable,nombre_otra_variable,id_variable;
+non terminal Token asignacion,tipos_datos,cont_element_by_id;
+non terminal Token estruc_if,if,condicion,cont_estruc_if,estruc_else_if,else_if,un_else_if,inicio_else_if,estruc_else,else,inicio_else;
+non terminal Token fin_instruccion_error,funciones_especiales,funciones_especiales_parametros,funciones_especiales_sin_parametros;
+non terminal Token estruc_repeat,asig_decla_repeat,declaracion_asginacion_repeat,declaracion_repeat,asignacion_repeat,huntil;
+non terminal Token estruc_while,thenwhile;
+non terminal Token insert,estruc_cont_insert,cont_insert;
+non terminal Token instrucciones,instrucciones_para_if;
+
+/*precedencia*/
+
+precedence left SUMA, MENOS,COMA;
+precedence left MULT,DIAG;
+precedence left IGUALACION,MEN_QUE,MAY_QUE,DIFERENTE,MAQ,MENQ;
+precedence left BARRA90;
+precedence left AND_1;
+precedence left ADMIRACION;
+
+/*gramatica*/
+
+inicio ::= etiqueta_gcic head body fin_etiqueta_gcic
+			;
+
+etiqueta_gcic ::= inicio_gcic parametros_etiquetas
+					;
+
+inicio_gcic ::= MENQ C_GCIC
+				|error
+				;
+
+parametros_etiquetas ::= varios_parametro_etiqueta MAQ
+						|MAQ
+						|error
+						;
+
+varios_parametro_etiqueta ::=  varios_parametro_etiqueta parametro_etiqueta
+								|parametro_etiqueta
+								;
+
+parametro_etiqueta ::= inicio_param_etiq string fin_param_etiq
+						;
+
+inicio_param_etiq ::=	CORI PARAMETRO IGUAL
+					  	;
+
+string ::=	STRING
+			|STRING_WS
+			|error
+			;
+
+fin_param_etiq ::= 	CORD
+					|error
+					;
+
+cierre_etiqueta ::= MAQ
+					|error
+					;
+
+fin_etiqueta_gcic ::= 	pre_fin_etiq cierre_gcic
+						|error
+						;
+pre_fin_etiq ::= MENQ DIAG 
+				;
+cierre_gcic ::= C_GCIC MAQ
+				|error
+				;
+
+
+head ::= etiqueta_head cont_head fin_etiqueta_head
+		;
+etiqueta_head ::= 	inicio_head cierre_etiqueta
+				 	;
+inicio_head ::= MENQ C_HEAD
+				|error
+				;
+fin_etiqueta_head ::= 	pre_fin_etiq cierre_head
+						|error C_HEAD
+						;
+cierre_head ::= C_HEAD MAQ
+				|error 
+				;
+
+cont_head ::= 	cont_head etiqueta_para_head
+				|etiqueta_para_head
+				;
+
+etiquetas_para_head ::= etiquetas_para_head etiqueta_para_head
+					|etiqueta_para_head
+					;
+
+etiqueta_para_head ::= link
+				  |title
+				  |error parametros_etiquetas
+				  ;
+
+link ::= etiqueta_link fin_etiqueta_link
+		;
+etiqueta_link ::= 	inicio_link parametros_etiquetas
+					;
+inicio_link ::= MENQ C_LINK
+				;
+fin_etiqueta_link ::= pre_fin_etiq cierre_link
+						|error C_LINK
+						;
+cierre_link ::= C_LINK MAQ
+				|error
+				;
+
+title ::= etiqueta_title cont_etiqueta fin_etiqueta_title
+			;
+
+etiqueta_title ::= inicio_title cierre_etiqueta
+					;
+inicio_title ::= MENQ C_TITLE
+				;
+fin_etiqueta_title ::= pre_fin_etiq cierre_title
+						|error
+						;
+cierre_title ::= 	C_TITLE MAQ
+					|error
+					;
+
+cont_etiqueta ::=  	varios_contenido
+					|
+					;
+
+varios_contenido ::= varios_contenido todo_contenido
+					|todo_contenido
+					;
+
+todo_contenido ::= STRING
+					|STRING_WS
+					|STRING_TOTAL
+					|ID_VARIABLE|ID_ELEMENT
+					|MULT
+					|SUMA 
+					|MENOS
+					|BARRA90|DIAG|CORD|CORI|IGUAL
+					|LLAI|LLAD|COMA|SEMI|DOS_PUNTOS|ADMIRACION|INSERTAR|AND_1
+					|PAI|PAD|CHAR|ENTERO|DECIMAL|BOOLEAN|INVALID
+					;
+
+body ::= etiqueta_body cont_body fin_etiqueta_body
+		;
+
+etiqueta_body ::= inicio_body parametros_etiquetas
+					;
+
+inicio_body ::= MENQ C_BODY
+				|error
+				;
+fin_etiqueta_body ::= 	pre_fin_etiq cierre_body
+						|error C_BODY
+						;
+cierre_body ::= C_BODY MAQ
+				|error
+				;
+cont_body ::= 	cont_body etiqueta_para_body
+				|etiqueta_para_body
+				;
+
+etiquetas_para_body ::= etiquetas_para_body etiqueta_para_body
+					|etiqueta_para_body
+					;
+
+etiqueta_para_body ::= 	etq_generica
+						|etiqueta_br
+						|scripting
+						|error parametros_etiquetas
+						;
+c_etiqueta_g ::=		 C_SPAM
+						|C_INPUT
+						|C_TEXTAREA
+						|C_SELECT
+						|C_OPTION
+						|C_DIV
+						|C_IMG
+						|C_BUTTON
+						|C_H1
+						|C_P
+						;
+
+etq_generica ::= etiqueta_g cont_etiqueta fin_etiqueta_g
+			;
+etiqueta_g ::= 	inicio_g parametros_etiquetas
+					;
+inicio_g ::= MENQ c_etiqueta_g
+				;
+fin_etiqueta_g ::= 	pre_fin_etiq cierre_g
+					|error
+					;
+cierre_g ::= 	c_etiqueta_g MAQ
+				|error
+				;
+
+etiqueta_br ::= inicio_br cierre_etiqueta
+				;
+inicio_br ::= MENQ C_BR
+				;
+
+scripting ::= 	etiqueta_scripting cont_scripting 
+				;
+etiqueta_scripting ::= inicio_scripting cierre_etiqueta
+						;
+inicio_scripting ::= MENQ C_SCRIPTING
+						;
+fin_etiqueta_scripting ::= pre_fin_etiq cierre_scripting
+							|error C_SCRIPTING
+							;
+cierre_scripting ::= 	C_SCRIPTING MAQ
+						|error
+						;
+
+cont_scripting ::= funciones fin_etiqueta_scripting
+					|fin_etiqueta_scripting
+					;
+funciones ::= funciones functions
+				|functions
+				;
+functions ::= on_load
+			|process_
+			|error parentesis
+			;
+
+on_load ::= funcion_on_load cont_funcion
+			;
+process_ ::= funcion_process_ cont_funcion
+			;
+
+funcion_on_load ::= name_on_load parentesis
+					;
+
+name_on_load ::= ON_LOAD
+				;
+parentesis ::= PAI PAD
+				|error
+				;
+
+funcion_process_ ::= name_funcion_g parentesis
+						;
+name_funcion_g ::= NOMBRE_FUNCION
+					;
+
+cont_funcion ::= inicio_funcion funcion fin_funcion
+					;
+
+inicio_funcion ::= CORI 
+					|error
+					;
+fin_funcion ::= CORD
+				|error
+				;
+funcion ::= tipos_instrucciones 
+			|
+			;
+tipos_instrucciones ::= tipos_instrucciones tipo_instruccion
+						|tipo_instruccion
+						;
+tipo_instruccion ::= declaracion_asginacion
+					|estruc_if
+					|funciones_especiales
+					|estruc_repeat
+					|estruc_while
+					|insert
+					;
+
+expr_list ::= expr_list expr:e       
+            | expr:e               
+			;
+expr      ::= expr:e1 SUMA  expr:e2        
+             |expr:e1 MENOS expr:e2       
+             |expr:e1 MULT expr:e2
+             |expr:e1 DIAG expr:e2
+             |expr:e1 IGUALACION expr:e2
+             |expr:e1 DIFERENTE expr:e2
+             |expr:e1 MEN_QUE expr:e2
+             |expr:e1 MAY_QUE expr:e2
+             |expr:e1 MAQ expr:e2
+             |expr:e1 MENQ expr:e2
+             |expr:e1 BARRA90 BARRA90 expr:e2
+             |expr:e1 AND_1 AND_1 expr:e2
+             |ADMIRACION expr:e1
+	       	 |PAI expr:e PAD	        
+	         |MENOS ENTERO:n
+	         |MENOS DECIMAL:d
+	         |ENTERO:n
+	         |DECIMAL:d
+	         |CHAR:c
+	         |STRING:s
+	         |STRING_WS:s
+	         |BOOLEAN:b
+	         |ID_VARIABLE
+	         |error             
+             ;
+
+estruc_init ::= inicio_init funcion fin_estruct
+				;
+inicio_init ::= el_init ini_estruct
+				;
+el_init ::= INIT
+		|error
+		;
+ini_estruct ::= LLAI DOS_PUNTOS
+				|error
+				;
+fin_estruct ::= DOS_PUNTOS LLAD END
+				|error
+				;
+
+declaracion_asginacion ::= declaracion asignacion
+							;
+fin_instruccion ::= SEMI
+					;
+declaracion ::= tipo_dato modo
+				|nombre_variable
+				;
+tipo_dato ::= ID_INTEGER
+			|ID_DECIMAL
+			|ID_STRING
+			|ID_BOOLEAN
+			|ID_CHAR
+			;
+modo ::= GLOBAL nombre_variable
+		|nombre_variable
+		|error
+		;
+nombre_variable ::= ID_VARIABLE otras_variables
+					;
+otras_variables ::= otra_variable
+					|
+					;
+otra_variable ::= otra_variable nombre_otra_variable
+				  | nombre_otra_variable
+				  ;
+nombre_otra_variable ::= COMA id_variable
+						;
+id_variable ::= ID_VARIABLE
+				|error
+				;
+asignacion ::= 	IGUAL tipos_datos fin_instruccion
+				|fin_instruccion
+				|error
+				;
+tipos_datos ::= expr
+				|GET_ELEMENT_BY_ID cont_element_by_id
+				;
+cont_element_by_id ::= PAI ID_ELEMENT PAD
+					|error
+					;
+estruc_if ::= 	if estruc_else_if
+				;
+if ::= IF condicion cont_estruc_if
+		;
+condicion ::= 	PAI expr PAD
+				|error
+				;
+cont_estruc_if ::= 	THEN instrucciones_para_if
+					|error
+					;
+
+estruc_else_if ::= 	else_if estruc_else
+					|estruc_else
+					;
+else_if ::= else_if un_else_if
+			|un_else_if
+			;
+un_else_if ::= inicio_else_if condicion cont_estruc_if
+				;
+inicio_else_if ::= ELSE IF				
+					;
+estruc_else ::= else
+				|
+				;
+else ::= inicio_else instrucciones_para_if
+		;
+inicio_else ::= ELSE 
+				;
+fin_instruccion_error ::= SEMI
+						|error
+						;
+
+funciones_especiales ::= 	funciones_especiales_parametros fin_instruccion_error
+							|funciones_especiales_sin_parametros fin_instruccion_error
+							;
+funciones_especiales_parametros ::= ASC condicion
+									|DESC condicion
+									|LETPAR_NUM condicion
+									|LETIMPAR_NUM condicion
+									|REVERSE condicion
+									|ALERT_INFO condicion
+									;
+
+funciones_especiales_sin_parametros ::= CARACTER_ALEATORIO parentesis 
+										|NUM_ALEATORIO parentesis
+										|EXIT parentesis
+										;
+
+estruc_repeat ::= REPEAT asig_decla_repeat huntil instrucciones_para_if
+				;
+asig_decla_repeat ::= PAI declaracion_asginacion_repeat PAD
+					 |error
+					 ;
+
+declaracion_asginacion_repeat ::= declaracion_repeat asignacion_repeat
+									;
+
+declaracion_repeat ::= tipo_dato ID_VARIABLE
+						|ID_VARIABLE
+						|error
+						;
+asignacion_repeat ::= 	IGUAL expr
+						|error
+						;
+
+
+huntil ::= HUNTIL condicion
+			|error
+			;
+estruc_while ::= WHILE condicion thenwhile instrucciones_para_if
+				;
+thenwhile ::= 	THENWHILE
+				|error
+				;
+insert ::= INSERT estruc_cont_insert fin_instruccion_error
+			;
+estruc_cont_insert ::= 	PAI cont_insert PAD
+						|error
+						;
+
+cont_insert ::=	cont_insert COMA cont_insert
+				|ID_ELEMENT
+				|ID_VARIABLE
+				|error
+				;
+
+instrucciones ::= 	estruc_init
+					|tipo_instruccion
+					;
+instrucciones_para_if ::= estruc_init
+						|insert
+						|funciones_especiales
+						;
