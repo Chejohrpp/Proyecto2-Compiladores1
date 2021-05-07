@@ -3,42 +3,209 @@ package com.mycompany.p2c1.ReglasGram.gcic;
 import com.mycompany.p2c1.ReglasGram.Token;
 import java_cup.runtime.*;
 import com.mycompany.p2c1.ReglasGram.gcic.symGCIC.*;
+import com.mycompany.p2c1.objetos.*;
 import java.util.ArrayList;
 import java.util.List;
 
 parser code {:
 
 
-	private List<String> listaErrores;
+	private List<ReportError> listaErrores;
+	private String codigoHTML = "";
+	private String losEstilos = "";
+	private String id = "id";
+	private boolean isParameterGCIC = true;
 
 	public ParserGCIC(LexerGCIC lex){
 		super(lex);
-		listaErrores = new ArrayList<String>();
+		listaErrores = new ArrayList<ReportError>();
 	}
+	 @Override
 	public void syntax_error(Symbol cur_token){
-			String nombreSimbolo = symbl_name_from_id(cur_token.sym);
-            Token token = (Token) cur_token.value;
+			Token token = (Token) cur_token.value;
+			/*			            
             String tokenEsperados = "Tokens esperados: ";
-            for (Integer expected_token_id : expected_token_ids()) {
-            	if(!symbl_name_from_id(expected_token_id).equals("error")){
-            		//System.out.println("Tokens Esperados: " + symbl_name_from_id(expected_token_id));
-            		tokenEsperados += symbl_name_from_id(expected_token_id) + " ";
-            	}                
-            }
+            tokenEsperados += listTokensEsperados();
 			String msgError =  "Error: ( "+ token.getLexema() +" ) -> {Linea: "+cur_token.left+", Columna: "+ cur_token.right +" } " + tokenEsperados;
 			listaErrores.add(msgError);
-	}
+			*/
 
+			String nombreSimbolo = symbl_name_from_id(cur_token.sym);
+			if(nombreSimbolo.equals("INVALID")){
+				addError("Lexico",token,"No se esperaba: " + token.getLexema(),null);
+			}else{
+				addError("Sintactico",token,"No se esperaba: " + token.getLexema(),null);
+			}		
+
+	}
+	 @Override
 	public void report_fatal_error(String message, Object info){
 			String Elerror = "Ocurrio un error no recuperable al analizar: " + message + " -> {objeto: " + info + "}";
-			listaErrores.add(Elerror);	
+
+			if(info instanceof Symbol ){
+				Symbol sim = (Symbol) info;
+				Token token = (Token) sim.value;
+				/*
+				String msgError =  "Error: ( "+ token.getLexema() +" ) -> {Linea: "+sim.left+", Columna: "+ sim.right +" } ";
+				listaErrores.add(msgError);
+				*/
+				addError("Sintactico",token,message,null);
+			}else{
+				System.out.println("Error -- :  " + message);
+			}
+
+			//listaErrores.add(Elerror);	
+	}
+	 @Override
+	public void report_error(String message, Object info){
+			System.out.println("Error desde el report_error: " + message);
+	}
+	 @Override
+	public void unrecovered_syntax_error(Symbol cur_token){
+		report_fatal_error("No se puede reparar y analizar el Error sintactico", cur_token);
+	}
+
+	private void addError(String tipoError, Token token,String descError, String solucion){
+			ReportError reporte = new ReportError();
+			reporte.setTipoError(tipoError);
+			reporte.setColumna(token.getColumna());
+			reporte.setLinea(token.getLinea());
+			if (solucion == null) {
+                reporte.setSolucion(listTokensEsperados());
+            }else{
+                reporte.setSolucion(solucion);
+            }
+			reporte.setDescripcion(descError);
+			listaErrores.add(reporte);
+
+	}
+	private String listTokensEsperados(){
+		String tokenEsperados = "";
+		for (Integer expected_token_id : expected_token_ids()) {
+            	if(!symbl_name_from_id(expected_token_id).equals("error")){
+            		String nameToken = nameTokenEsperado(symbl_name_from_id(expected_token_id));
+            		if (nameToken == null){
+            			tokenEsperados += "<p>"+symbl_name_from_id(expected_token_id) + "<p>";
+            		}else{
+            			tokenEsperados += "<p>"+nameToken + "<p>";
+            		}            		
+            	}                
+            }
+        return tokenEsperados;
 	}
 
 	public List getListaErrores(){
 		return listaErrores;
 	}
+	public String getCodigoHTML(){
+		return codigoHTML;
+	}
+	public String getId(){
+		return id;
+	}
+	 @Override
 	protected int error_sync_size(){
 		return 1;
+	}
+	private String nameTokenEsperado(String nameToken){
+		switch (nameToken){
+			case "MENQ" : return "<";
+			case "CORI" : return "[";
+			case "CORD" : return "]";
+			case "IGUAL" : return "=";
+			case "STRING" : return "string";
+			case "STRING_WS" : return "string sin espacios";
+			case "MAQ" : return ">";
+			case "DIAG" : return "/";
+			case "STRING_TOTAL" : return "cadena de texto";
+			case "ID_VARIABLE" : return "nombre de una variable";
+			case "NOMBRE_FUNCION" : return "nombre de funcion (PROCESS_(nombre de una funcion con letras a-z o A-Z))";
+			case "LLAI" : return "{";
+			case "LLAD" : return "}";
+			case "DOS_PUNTOS" : return ":";
+			case "COMA" : return ",";
+			case "ADMIRACION" : return "!";
+			case "SEMI" : return ";";
+			case "BARRA90" : return "|";
+			case "AND_1" : return "&";
+			case "SUMA" : return "+";
+			case "MENOS" : return "-";
+			case "MULT" : return "*";
+			case "GET_ELEMENT_BY_ID" : return "getElemenById";
+			case "IGUALACION" : return "==";
+			case "MEN_QUE" : return "<=";
+			case "MAY_QUE" : return ">=";
+			case "DIFERENTE" : return "!=";
+			case "CHAR" : return "caracter";
+			case "DECIMAL" : return "numero decimal";
+			case "BOOLEAN" : return "true or false";
+			case "INVALID" : return "caracter cualquiera";
+			case "ID_ELEMENT" : return "string encerrado entre comillas simples";
+			case "ENTERO": return "numero entero";
+			case "PAI" : return "(";
+			case "PAD": return ")";
+            default: return null;
+		}
+	}
+
+	private String parametrosCss(String param){
+			switch (param){
+			case "href" : return "href";
+			case "background" : return "background-color";
+			case "color" : return "color";
+			case "font-size" : return "font-size";
+			case "font-family" : return "font-family";
+			case "type" : return "type";
+			case "id" : return "id";
+			case "name" : return "name";
+			case "cols" : return "cols";
+			//case "rows" : return "";
+			//case "class" : return "";
+			//case "src" : return "";
+			//case "width" : return "";
+			//case "height" : return "";
+			//case "alt" : return "";
+			//case "onclick" : return "";
+			case "text-align" : return "text-align";
+			 default: return param;
+		}
+	}
+	private boolean isParametrosCss(String param){
+		switch (param){
+			case "background" : return true;
+			case "color" : return true;
+			case "font-size" : return true;
+			case "font-family" : return true;
+			case "text-align" : return true;
+			default: return false;
+		}
+	}
+
+	private void agregarVariable(Token varNueva){
+		String nombreVariable = varNueva.getLexema();
+		String tipoVariable = varNueva.getNombreToken();
+		switch(tipoVariable){
+			case "int" :{
+
+			}
+			case "decimal" :{
+
+			}
+			case "dobule" :{
+
+			}
+			case "char" :{
+
+			}
+			case "boolean" :{
+
+			}
+			default : break;
+		}
+	}
+
+	private void agregarVariableGlobal(Token varNueva){
+
 	}
 :}
 
@@ -47,7 +214,7 @@ terminal Token MENQ, C_GCIC, CORI, PARAMETRO, IGUAL;
 terminal Token STRING, STRING_WS, CORD,MAQ, DIAG;
 terminal Token C_HEAD,C_LINK,C_TITLE,STRING_TOTAL,ID_VARIABLE,C_BODY;
 terminal Token C_SPAM, C_INPUT,C_TEXTAREA,C_SELECT,C_OPTION,C_DIV,C_IMG,C_BR,C_BUTTON,C_H1,C_P,C_SCRIPTING;
-terminal Token ON_LOAD,NOMBRE_FUNCION,PAI,PAD,INSERTAR,LLAI, LLAD;
+terminal Token ON_LOAD,NOMBRE_FUNCION,PAI,PAD,LLAI, LLAD;
 terminal Token DOS_PUNTOS,COMA,ADMIRACION,SEMI,BARRA90,AND_1;
 terminal Token SUMA, MENOS, MULT,INSERT,GET_ELEMENT_BY_ID,IGUALACION,MEN_QUE,MAY_QUE,DIFERENTE;
 terminal Token CHAR,ENTERO,DECIMAL,BOOLEAN,INVALID;
@@ -66,7 +233,7 @@ non terminal Token etiqueta_title,inicio_title,fin_etiqueta_title,cierre_title,c
 non terminal Token etiquetas_para_head,etiqueta_para_head,body,etiqueta_body,inicio_body;
 non terminal Token fin_etiqueta_body,cierre_body,cont_body,etiquetas_para_body,etiqueta_para_body;
 non terminal Token c_etiqueta_g,etq_generica;
-non terminal Token etiqueta_g,inicio_g, fin_etiqueta_g,cierre_g;
+non terminal Token etiqueta_g,cont_etq_g,varios_contenido_g,un_cont_etq_g,inicio_g, fin_etiqueta_g,cierre_g;
 non terminal Token etiqueta_br,inicio_br,scripting,etiqueta_scripting,inicio_scripting,fin_etiqueta_scripting;
 non terminal Token cierre_scripting,cont_scripting,funciones,functions,on_load,process_,funcion_on_load,name_on_load,parentesis;
 non terminal Token funcion_process_,name_funcion_g,cont_funcion,inicio_funcion,fin_funcion,funcion,tipos_instrucciones,tipo_instruccion;
@@ -96,29 +263,75 @@ inicio ::= etiqueta_gcic head body fin_etiqueta_gcic
 			;
 
 etiqueta_gcic ::= inicio_gcic parametros_etiquetas
+							{:
+								codigoHTML += "<html>\n";
+								isParameterGCIC = false;
+							:}
 					;
 
 inicio_gcic ::= MENQ C_GCIC
 				|error
 				;
 
-parametros_etiquetas ::= varios_parametro_etiqueta MAQ
-						|MAQ
+parametros_etiquetas ::= varios_parametro_etiqueta:e MAQ
+							{:
+								RESULT = e;
+							:}
+						|MAQ:e
+							{:
+								e.setNombreToken("");
+								RESULT = e;
+							:}
 						|error
 						;
 
-varios_parametro_etiqueta ::=  varios_parametro_etiqueta parametro_etiqueta
-								|parametro_etiqueta
+varios_parametro_etiqueta ::=  varios_parametro_etiqueta:e parametro_etiqueta:e1
+									{:
+										if(e.getNombreToken() == null){
+											e.setNombreToken(e1.getNombreToken());
+										}else if(e1.getNombreToken() != null){
+											e.setNombreToken(e.getNombreToken() + " " + e1.getNombreToken());
+										}									
+										RESULT = e;
+									:}
+								|parametro_etiqueta:e
+									{:
+										RESULT = e;
+									:}
 								;
 
-parametro_etiqueta ::= inicio_param_etiq string fin_param_etiq
+parametro_etiqueta ::= inicio_param_etiq:e1 string:e2 fin_param_etiq
+							{:
+								if(id==null){
+									id = e2.getLexema();
+								}
+								if(isParametrosCss(e1.getLexema())){
+									losEstilos += e2.getLexema() + ";";
+								}else{
+									e1.setNombreToken(e1.getNombreToken() + e2.getLexema() + "\"");
+								}
+								RESULT = e1;
+							:}
 						;
 
-inicio_param_etiq ::=	CORI PARAMETRO IGUAL
+inicio_param_etiq ::=	CORI PARAMETRO:e IGUAL
+							{:
+								if(isParameterGCIC){
+									if(e.getLexema().equals("id")){
+										id = null;
+									}
+								}
+								if(isParametrosCss(e.getLexema())){
+									losEstilos += parametrosCss(e.getLexema()) + ":";
+								}else{
+									e.setNombreToken(parametrosCss(e.getLexema()) + "=\"");
+								}								
+								RESULT = e;
+							:}
 					  	;
 
-string ::=	STRING
-			|STRING_WS
+string ::=	STRING:e {: RESULT = e;:}
+			|STRING_WS:e {: RESULT = e;:}
 			|error
 			;
 
@@ -131,6 +344,9 @@ cierre_etiqueta ::= MAQ
 					;
 
 fin_etiqueta_gcic ::= 	pre_fin_etiq cierre_gcic
+							{:
+								codigoHTML += "</html>";
+							:}
 						|error
 						;
 pre_fin_etiq ::= MENQ DIAG 
@@ -143,11 +359,17 @@ cierre_gcic ::= C_GCIC MAQ
 head ::= etiqueta_head cont_head fin_etiqueta_head
 		;
 etiqueta_head ::= 	inicio_head cierre_etiqueta
+						{:
+							codigoHTML += "<head>\n";
+						:}
 				 	;
 inicio_head ::= MENQ C_HEAD
 				|error
 				;
 fin_etiqueta_head ::= 	pre_fin_etiq cierre_head
+							{:
+								codigoHTML += "</head>\n";
+							:}
 						|error C_HEAD
 						;
 cierre_head ::= C_HEAD MAQ
@@ -180,50 +402,109 @@ cierre_link ::= C_LINK MAQ
 				|error
 				;
 
-title ::= etiqueta_title cont_etiqueta fin_etiqueta_title
+title ::= etiqueta_title cont_etiqueta:e
+				{:
+							codigoHTML += e.getLexema();
+				:}
+			 fin_etiqueta_title
 			;
 
 etiqueta_title ::= inicio_title cierre_etiqueta
+						{:
+							codigoHTML += "<title>";
+						:}
 					;
 inicio_title ::= MENQ C_TITLE
 				;
 fin_etiqueta_title ::= pre_fin_etiq cierre_title
+							{:
+								codigoHTML += "</title>\n";
+							:}							
 						|error
 						;
 cierre_title ::= 	C_TITLE MAQ
 					|error
 					;
 
-cont_etiqueta ::=  	varios_contenido
+cont_etiqueta ::=  	varios_contenido:e
+						{:
+							RESULT = e;
+						:}						
 					|
 					;
 
-varios_contenido ::= varios_contenido todo_contenido
-					|todo_contenido
+varios_contenido ::= varios_contenido:e todo_contenido:e1
+						{:
+							if(e.getNombreToken() != null){
+								e.setLexema(e.getLexema() + e1.getLexema());
+								e.setNombreToken(null);
+							}else if( e1.getNombreToken() != null){
+								e.setLexema(e.getLexema() + e1.getLexema());
+								e.setNombreToken("INVALID");
+							}
+							else{
+								e.setLexema(e.getLexema() + " " + e1.getLexema());
+							}														
+							RESULT = e;
+						:}
+					|todo_contenido:e
+						{:											
+							RESULT = e;
+						:}
 					;
 
-todo_contenido ::= STRING
-					|STRING_WS
-					|STRING_TOTAL
-					|ID_VARIABLE|ID_ELEMENT
-					|MULT
-					|SUMA 
-					|MENOS
-					|BARRA90|DIAG|CORD|CORI|IGUAL
-					|LLAI|LLAD|COMA|SEMI|DOS_PUNTOS|ADMIRACION|INSERTAR|AND_1
-					|PAI|PAD|CHAR|ENTERO|DECIMAL|BOOLEAN|INVALID
+todo_contenido ::= STRING:e {: RESULT = e;:}
+					|STRING_WS:e {: RESULT = e;:}
+					|STRING_TOTAL:e {: RESULT = e;:}
+					|ID_VARIABLE:e {: RESULT = e;:}
+					|ID_ELEMENT:e {: RESULT = e;:}
+					|MULT:e {: RESULT = e;:}
+					|SUMA :e {: RESULT = e;:}
+					|MENOS:e {: RESULT = e;:}
+					|BARRA90:e {: RESULT = e;:}
+					|DIAG:e {: RESULT = e;:}
+					|CORD:e {: RESULT = e;:}
+					|CORI:e {: RESULT = e;:}
+					|IGUAL:e {: RESULT = e;:}
+					|LLAI:e {: RESULT = e;:}
+					|LLAD:e {: RESULT = e;:}
+					|COMA:e {: RESULT = e;:}
+					|SEMI:e {: RESULT = e;:}
+					|DOS_PUNTOS:e {: RESULT = e;:}
+					|ADMIRACION:e {: RESULT = e;:}
+					|AND_1:e {: RESULT = e;:}
+					|PAI:e {: RESULT = e;:}
+					|PAD:e {: RESULT = e;:}
+					|CHAR:e {: RESULT = e;:}
+					|ENTERO:e {: RESULT = e;:}
+					|DECIMAL:e {: RESULT = e;:}
+					|BOOLEAN:e {: RESULT = e;:}
+					|INVALID:e {: e.setNombreToken("INVALID"); RESULT = e;:}
 					;
 
 body ::= etiqueta_body cont_body fin_etiqueta_body
 		;
 
-etiqueta_body ::= inicio_body parametros_etiquetas
+etiqueta_body ::= inicio_body
+						{:
+							losEstilos = "";
+						:}
+				 parametros_etiquetas:e
+						{:
+							if(e.getNombreToken() == null){
+								e.setNombreToken("");
+							}
+							codigoHTML += "<body "+ e.getNombreToken() +" style=\"" + losEstilos + "\" >\n";
+						:}
 					;
 
 inicio_body ::= MENQ C_BODY
 				|error
 				;
 fin_etiqueta_body ::= 	pre_fin_etiq cierre_body
+							{:
+								codigoHTML += "</body>\n";
+							:}
 						|error C_BODY
 						;
 cierre_body ::= C_BODY MAQ
@@ -242,32 +523,91 @@ etiqueta_para_body ::= 	etq_generica
 						|scripting
 						|error parametros_etiquetas
 						;
-c_etiqueta_g ::=		 C_SPAM
-						|C_INPUT
-						|C_TEXTAREA
-						|C_SELECT
-						|C_OPTION
-						|C_DIV
-						|C_IMG
-						|C_BUTTON
-						|C_H1
-						|C_P
+c_etiqueta_g ::=		 C_SPAM:e {:e.setNombreToken("span"); RESULT = e;:}
+						|C_INPUT:e {: e.setNombreToken("input"); RESULT = e;:}
+						|C_TEXTAREA:e {: e.setNombreToken("textarea"); RESULT = e;:}
+						|C_SELECT:e {: e.setNombreToken("select");  RESULT = e;:}
+						|C_OPTION:e {:  e.setNombreToken("option");RESULT = e;:}
+						|C_DIV:e {:  e.setNombreToken("div");RESULT = e;:}
+						|C_IMG:e {: e.setNombreToken("img"); RESULT = e;:}
+						|C_BUTTON:e {: e.setNombreToken("button"); RESULT = e;:}
+						|C_H1:e {:  e.setNombreToken("h1");RESULT = e;:}
+						|C_P:e {: e.setNombreToken("p"); RESULT = e;:}
 						;
 
-etq_generica ::= etiqueta_g cont_etiqueta fin_etiqueta_g
+etq_generica ::= etiqueta_g:e0 cont_etq_g
+						{:
+							/*if(e != null){
+								codigoHTML += e.getLexema();
+							}*/							
+						:}
+				 fin_etiqueta_g:e1
+				 		{:
+				 			if(!e0.getNombreToken().equals(e1.getNombreToken())){
+				 				/*listaErrores.add("Error: ( "+ e1.getLexema() +" ) -> {Linea: "+e1.getLinea()+", Columna: "+e1.getColumna() +" }: Se esperaba la etiqueta: " + e0.getLexema() );*/
+				 				addError("Sintactico",e1,e1.getLexema(),"Se esperaba la etiqueta: " + e0.getLexema());
+				 			}
+
+
+				 		:}
 			;
-etiqueta_g ::= 	inicio_g parametros_etiquetas
+etiqueta_g ::= 	inicio_g:e0
+					{:
+						losEstilos = "";
+					:}
+				 parametros_etiquetas:e
+					{:
+						if(e.getNombreToken() == null){
+							e.setNombreToken("");
+						}
+						if(e.getNombreToken().equals("input")){
+							codigoHTML += "<"+e0.getNombreToken() + " " + e.getNombreToken() +" style=\"" + losEstilos + "\" value=\"";
+						}else{
+							codigoHTML += "<"+e0.getNombreToken() + " " + e.getNombreToken() +" style=\"" + losEstilos + "\" >";
+						}
+						 RESULT = e0;
+					:}
 					;
-inicio_g ::= MENQ c_etiqueta_g
+
+cont_etq_g ::=  varios_contenido_g
+				|varios_contenido:e
+					{:
+						if(e != null){
+							codigoHTML += e.getLexema();
+						}
+					:}
+				|
 				;
-fin_etiqueta_g ::= 	pre_fin_etiq cierre_g
+
+varios_contenido_g ::= varios_contenido_g un_cont_etq_g
+						|un_cont_etq_g
+						;
+
+ un_cont_etq_g ::= etq_generica
+				|etiqueta_br
+				|scripting
+				;
+inicio_g ::= MENQ c_etiqueta_g:e {: RESULT = e;:}
+				;
+fin_etiqueta_g ::= 	pre_fin_etiq cierre_g:e
+						{:
+							if(e.getNombreToken().equals("input")){
+								codigoHTML += "\">\n";
+							}else{
+								codigoHTML += "</"+e.getNombreToken() +">\n";
+							}
+							 RESULT = e;
+						:}
 					|error
 					;
-cierre_g ::= 	c_etiqueta_g MAQ
+cierre_g ::= 	c_etiqueta_g:e MAQ {: RESULT = e;:}
 				|error
 				;
 
 etiqueta_br ::= inicio_br cierre_etiqueta
+					{:
+						codigoHTML += "<br>\n";
+					:}
 				;
 inicio_br ::= MENQ C_BR
 				;

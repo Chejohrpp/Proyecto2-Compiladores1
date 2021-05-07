@@ -46,5 +46,9 @@ public class Token {
     public int getColumna() {
         return columna;
     }
+
+    public void setLexema(String lexema) {
+        this.lexema = lexema;
+    }
     
 }

@@ -100,12 +100,6 @@
                     <a class="nav-link active" href="#">Reporte de Utilización de los Captchas</a>
                   </li>
                   <li class="nav-item">
-                    <a class="nav-link active" href="#">Reporte de Errores de Compilación</a>
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link active" href="#"> Tabla de Símbolos en Tiempo Real</a>
-                  </li>
-                  <li class="nav-item">
                     <a class="nav-link active" href="#">Listado de Todos los Captchas Generados</a>
                   </li>
                 </ul>
@@ -113,14 +107,99 @@
             </div>
           </nav>
     <pre></pre>
-        <div class="container">
-                <form action="VerificarFileGCIC" method="POST" enctype="multipart/form-data; charset=utf-8">
+        <div class="container">               
+         <div class="row">
+            <div class="col">
+              <%-- Editor de texto --%>
+              <form action="VerificarFileGCIC" method="POST" enctype="multipart/form-data; charset=utf-8">
                 <textarea class="form-control" id="exampleFormControlTextarea1" rows="31" wrap="off" name="txt">
                     ${texto}
                 </textarea>
                 <pre></pre>
                 <input type="submit" class="btn btn-primary" value="EnviarGramatica">
             </form>
+            </div>
+              <c:if test="${mostrar == 1}">
+                <div class="col">
+                  <div class="row">
+                      <%-- Tabla Simbolos --%>
+                      <table class="table table-bordered  table-hover table-sm">
+                    <thead class="thead-dark">
+                    <tr class="table-primary">
+                      <th scope="col">Posicion</th>
+                      <th scope="col">Identificador</th>
+                      <th scope="col">Tipo</th>
+                      <th scope="col">Valor</th>
+                      <th scope="col">Modo</th>
+                      <th scope="col">Procedimiento</th>
+                      <th scope="col">No.Ejecucion</th>
+                    </tr>
+                  </thead>
+                  <tbody>                      
+                 <%--<c:forEach items="${listaSimbolos}" var="sym">                          
+                          <tr>
+                            <th scope="row">${error.tipoError}</th>
+                            <td>${error.linea}</td>
+                            <td>${error.columna}</td>
+                            <td>${error.descripcion}</td>
+                            <td>${error.solucion}</td>
+                          </tr>
+                    </c:forEach>  --%>                 
+                    <tr>
+                       <th scope="row">1</th>
+                       <td>Texto</td>
+                       <td>String</td>
+                       <td>Hola muy buenas, como les....</td>
+                       <td>Global</td>
+                       <td>PROCESS_write()</td>
+                       <td>22</td>
+                     </tr>                 
+                  </tbody>
+                  
+                </table>
+                    </div>
+                 <c:if test="${success == 0}">
+                  <div class="row">
+                      <pre></pre>
+                    <%-- Errores --%>                   
+               <div class="alert alert-danger" role="alert">
+                Hubo Errores de compilacion
+              </div>
+               <table class="table table-bordered  table-hover table-sm">
+                    <thead class="thead-dark">
+                    <tr class="table-danger">
+                      <th scope="col">Tipo de Error</th>
+                      <th scope="col">Linea</th>
+                      <th scope="col">Columna</th>
+                      <th scope="col">Descripcion</th>
+                      <th scope="col">Solucion</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <c:forEach items="${listaErrores}" var="error">                          
+                          <tr>
+                            <th scope="row">${error.tipoError}</th>
+                            <td>${error.linea}</td>
+                            <td>${error.columna}</td>
+                            <td>${error.descripcion}</td>
+                            <td>${error.solucion}</td>
+                          </tr>
+                      </c:forEach>
+                  </tbody>
+                </table>                   
+                  </div>
+                </c:if>
+                </div>
+            </c:if>  
+          </div>                    
+          <c:if test="${success == 1}">
+                <pre></pre>
+                <div class="alert alert-success" role="alert">
+                        <p>Creado correctamente el Captcha</p>
+                        <p>Link: </p>
+                        localHost:8080/P2C1/ShowCaptcha?id=${ID}                        
+                </div>    
+            </c:if>            
         </div>
       <script src="https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js"></script>
       <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js"></script>

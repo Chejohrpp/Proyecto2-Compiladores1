@@ -7,13 +7,11 @@ package com.mycompany.p2c1.Controladores;
 
 import com.mycompany.p2c1.ReglasGram.gcic.LexerGCIC;
 import com.mycompany.p2c1.ReglasGram.gcic.ParserGCIC;
+import com.mycompany.p2c1.objetos.ReportError;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import javax.servlet.ServletException;
@@ -22,7 +20,6 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.Part;
 
 
 /**
@@ -49,31 +46,48 @@ public class VerificarFileGCIC extends HttpServlet {
         byte[] bytes = texto.getBytes(StandardCharsets.UTF_8);
         String utf8EncodedString = new String(bytes, StandardCharsets.UTF_8);;        
         try{
+            boolean isParserGood = false;
             Reader inputString = new StringReader(utf8EncodedString);
             BufferedReader reader = new BufferedReader(inputString);
             LexerGCIC lexer = new LexerGCIC(reader);
             ParserGCIC parser = new ParserGCIC(lexer);
             try{
                 parser.parse();
+                isParserGood= true;
             }catch(Exception e){
                 System.out.println("Error al parsear: " + e.getMessage());
             }
-            List listaErrores = parser.getListaErrores();
-            List ErrorLexer = lexer.getErroresLexicos();
-            for (Object listaErrore : listaErrores) {
-                System.out.println(listaErrore);
-            }
-            for (Object object : ErrorLexer) {
-                System.out.println(object);
-            }
-            if (listaErrores.size()==0) {
-                System.out.println("Todo esta correcto");
+            List<ReportError> listaErrores = parser.getListaErrores();
+            /*for (ReportError listaErrore : listaErrores) {
+                System.out.println(listaErrore.toString());
+            }*/
+            if (listaErrores.size()==0 && isParserGood) {
+                request.setAttribute("ID", parser.getId());               
+               /* request.setAttribute("success", 1);
+                request.setAttribute("mostrar", 1);                
+                request.setAttribute("texto", utf8EncodedString);                
+                request.getRequestDispatcher("/index.jsp").forward(request, response);*/
+               //request.getRequestDispatcher("/ShowCaptcha").forward(request, response);                
+                redireccionar(request,response,1,1,utf8EncodedString);
+            }else{
+                request.setAttribute("listaErrores", listaErrores);
+                redireccionar(request,response,0,1,utf8EncodedString);
             }
         }catch(Exception e){
-            System.out.println("Error al convertir : " + e.getMessage());
-        }
-        request.setAttribute("texto", utf8EncodedString);
-        request.getRequestDispatcher("/index.jsp").forward(request, response);
+            System.out.println("Error -- : " + e.getMessage());            
+            redireccionar(request,response,0,1,utf8EncodedString);
+        }       
+    }
+    
+    private void redireccionar(HttpServletRequest request, HttpServletResponse response, int success, int mostrar, String utf8EncodedString){
+        request.setAttribute("success", success);
+        request.setAttribute("mostrar", mostrar);
+        request.setAttribute("texto", utf8EncodedString);              
+        try{
+            request.getRequestDispatcher("/index.jsp").forward(request, response);
+        }catch(Exception e){
+            e.printStackTrace();
+        }        
     }
 
 }
