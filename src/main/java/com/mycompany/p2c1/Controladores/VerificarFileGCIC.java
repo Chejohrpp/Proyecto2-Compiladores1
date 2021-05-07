@@ -55,7 +55,7 @@ public class VerificarFileGCIC extends HttpServlet {
                 parser.parse();
                 isParserGood= true;
             }catch(Exception e){
-                System.out.println("Error al parsear: " + e.getMessage());
+                e.printStackTrace();
             }
             List<ReportError> listaErrores = parser.getListaErrores();
             /*for (ReportError listaErrore : listaErrores) {

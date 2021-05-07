@@ -6,6 +6,8 @@ import com.mycompany.p2c1.ReglasGram.gcic.symGCIC.*;
 import com.mycompany.p2c1.objetos.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Set;
 
 parser code {:
 
@@ -15,6 +17,7 @@ parser code {:
 	private String losEstilos = "";
 	private String id = "id";
 	private boolean isParameterGCIC = true;
+	private HashMap<String,Token> atributos= new HashMap();
 
 	public ParserGCIC(LexerGCIC lex){
 		super(lex);
@@ -144,6 +147,7 @@ parser code {:
 			case "ENTERO": return "numero entero";
 			case "PAI" : return "(";
 			case "PAD": return ")";
+			case "PARAMETRO": return "Algun Parametro aceptable Ejemplo:id";
             default: return null;
 		}
 	}
@@ -207,6 +211,132 @@ parser code {:
 	private void agregarVariableGlobal(Token varNueva){
 
 	}
+
+	private void verificarAtributos(String newAtriuto, Token token){
+		if(atributos.get(newAtriuto) == null){
+			atributos.put(newAtriuto,token);
+		}else{
+			addError("Semantico",token,"Esta repetido el atributo: " + newAtriuto, "Elimine el atributos repetido");
+		}
+	}
+
+	private void verificarAtributosEtiquetas(String etiqueta, Token token){
+		switch(etiqueta){
+			case "C_GCIC":{
+				if(atributos.remove("id") == null){
+					addError("Semantico",token,"La Eitqueta C_GCIC no contiene el id", "Agregue la etiqueta 'id' en C_GCIC");
+				}
+				atributos.remove("name");
+				break;
+			}
+			case "C_LINK":{
+				atributos.remove("href");
+				break;
+			}
+			case "C_BODY":{
+				atributos.remove("background");
+				break;
+			}
+			case "span":{
+				atributos.remove("font-size");
+				atributos.remove("font-family");
+				atributos.remove("text-align");
+				atributos.remove("id");
+				atributos.remove("color");
+				etiqueta = "C_SPAM";
+				break;
+			}
+			case "input":{
+				atributos.remove("type");
+				atributos.remove("font-size");
+				atributos.remove("font-family");
+				atributos.remove("text-align");
+				atributos.remove("id");
+				atributos.remove("color");
+				etiqueta = "C_INPUT";
+				break;
+			}
+			case "textarea":{
+				atributos.remove("rows");
+				atributos.remove("cols");
+				atributos.remove("font-size");
+				atributos.remove("font-family");
+				atributos.remove("text-align");
+				atributos.remove("id");
+				etiqueta = "C_TEXTAREA";
+				break;
+			}
+			case "select":{
+				atributos.remove("font-size");
+				atributos.remove("font-family");
+				atributos.remove("text-align");
+				atributos.remove("id");
+				atributos.remove("color");
+				etiqueta = "C_SELECT";
+				break;
+			}
+			case "div":{
+				atributos.remove("background");
+				atributos.remove("class");
+				atributos.remove("font-size");
+				atributos.remove("font-family");
+				atributos.remove("text-align");
+				atributos.remove("id");
+				atributos.remove("color");
+				etiqueta = "C_DIV";
+				break;
+			}
+			case "img":{
+				atributos.remove("src");
+				atributos.remove("width");
+				atributos.remove("height");
+				atributos.remove("id");
+				atributos.remove("alt");
+				etiqueta = "C_IMG";
+				break;
+			}
+			case "button":{
+				atributos.remove("background");
+				atributos.remove("onclick");
+				atributos.remove("font-size");
+				atributos.remove("font-family");
+				atributos.remove("text-align");
+				atributos.remove("id");
+				atributos.remove("color");
+				etiqueta = "C_BUTTON";
+				break;
+			}
+			case "h1":{
+				atributos.remove("font-size");
+				atributos.remove("font-family");
+				atributos.remove("text-align");
+				atributos.remove("id");
+				atributos.remove("color");
+				etiqueta = "C_H1";
+				break;
+			}
+			case "p":{
+				atributos.remove("font-size");
+				atributos.remove("font-family");
+				atributos.remove("text-align");
+				atributos.remove("id");
+				atributos.remove("color");
+				etiqueta = "C_P";
+				break;
+			}
+			default:break;
+		}
+		if (atributos.size() > 0){
+            Set<String> keySet = atributos.keySet();
+                for (String string : keySet) {
+                    addError("Semantico",atributos.get(string),
+                      "El Parametro " + string + " No es parte de la etiqueta " + etiqueta
+                       , "Elimine el parametro: ' "+ string + " ' en " +etiqueta);
+            }
+                    
+		}
+
+	}
 :}
 
 /*terminales*/
@@ -262,14 +392,19 @@ precedence left ADMIRACION;
 inicio ::= etiqueta_gcic head body fin_etiqueta_gcic
 			;
 
-etiqueta_gcic ::= inicio_gcic parametros_etiquetas
+etiqueta_gcic ::= inicio_gcic:e parametros_etiquetas
 							{:
 								codigoHTML += "<html>\n";
 								isParameterGCIC = false;
+								verificarAtributosEtiquetas(e.getNombreToken(),e);
 							:}
 					;
 
-inicio_gcic ::= MENQ C_GCIC
+inicio_gcic ::= MENQ C_GCIC:e
+					{:
+						e.setNombreToken("C_GCIC");
+						RESULT = e;
+					:}
 				|error
 				;
 
@@ -316,6 +451,7 @@ parametro_etiqueta ::= inicio_param_etiq:e1 string:e2 fin_param_etiq
 
 inicio_param_etiq ::=	CORI PARAMETRO:e IGUAL
 							{:
+								verificarAtributos(e.getLexema(),e);
 								if(isParameterGCIC){
 									if(e.getLexema().equals("id")){
 										id = null;
@@ -391,9 +527,20 @@ etiqueta_para_head ::= link
 
 link ::= etiqueta_link fin_etiqueta_link
 		;
-etiqueta_link ::= 	inicio_link parametros_etiquetas
+etiqueta_link ::= 	inicio_link:e
+							{:
+								atributos.clear();
+							:}
+					 parametros_etiquetas
+							{:
+								verificarAtributosEtiquetas(e.getNombreToken(),e);
+							:}
 					;
-inicio_link ::= MENQ C_LINK
+inicio_link ::= MENQ C_LINK:e
+					{:
+						e.setNombreToken("C_LINK");
+						RESULT = e;
+					:}
 				;
 fin_etiqueta_link ::= pre_fin_etiq cierre_link
 						|error C_LINK
@@ -485,9 +632,10 @@ todo_contenido ::= STRING:e {: RESULT = e;:}
 body ::= etiqueta_body cont_body fin_etiqueta_body
 		;
 
-etiqueta_body ::= inicio_body
+etiqueta_body ::= inicio_body:e0
 						{:
 							losEstilos = "";
+							atributos.clear();
 						:}
 				 parametros_etiquetas:e
 						{:
@@ -495,10 +643,15 @@ etiqueta_body ::= inicio_body
 								e.setNombreToken("");
 							}
 							codigoHTML += "<body "+ e.getNombreToken() +" style=\"" + losEstilos + "\" >\n";
+							verificarAtributosEtiquetas(e0.getNombreToken(),e0);
 						:}
 					;
 
-inicio_body ::= MENQ C_BODY
+inicio_body ::= MENQ C_BODY:e
+						{:
+							e.setNombreToken("C_BODY");
+							RESULT = e;
+						:}
 				|error
 				;
 fin_etiqueta_body ::= 	pre_fin_etiq cierre_body
@@ -554,16 +707,20 @@ etq_generica ::= etiqueta_g:e0 cont_etq_g
 etiqueta_g ::= 	inicio_g:e0
 					{:
 						losEstilos = "";
+						atributos.clear();
 					:}
 				 parametros_etiquetas:e
 					{:
-						if(e.getNombreToken() == null){
-							e.setNombreToken("");
-						}
-						if(e.getNombreToken().equals("input")){
-							codigoHTML += "<"+e0.getNombreToken() + " " + e.getNombreToken() +" style=\"" + losEstilos + "\" value=\"";
-						}else{
-							codigoHTML += "<"+e0.getNombreToken() + " " + e.getNombreToken() +" style=\"" + losEstilos + "\" >";
+						if(e != null){
+							if(e.getNombreToken() == null){
+								e.setNombreToken("");
+							}
+							if(e.getNombreToken().equals("input")){
+								codigoHTML += "<"+e0.getNombreToken() + " " + e.getNombreToken() +" style=\"" + losEstilos + "\" value=\"";
+							}else{
+								codigoHTML += "<"+e0.getNombreToken() + " " + e.getNombreToken() +" style=\"" + losEstilos + "\" >";
+							}
+							verificarAtributosEtiquetas(e0.getNombreToken(),e0);
 						}
 						 RESULT = e0;
 					:}
