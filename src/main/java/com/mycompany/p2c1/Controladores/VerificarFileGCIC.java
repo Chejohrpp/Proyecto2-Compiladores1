@@ -8,6 +8,7 @@ package com.mycompany.p2c1.Controladores;
 import com.mycompany.p2c1.ReglasGram.gcic.LexerGCIC;
 import com.mycompany.p2c1.ReglasGram.gcic.ParserGCIC;
 import com.mycompany.p2c1.objetos.ReportError;
+import com.mycompany.p2c1.objetos.Simbolo;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -58,28 +59,35 @@ public class VerificarFileGCIC extends HttpServlet {
                 e.printStackTrace();
             }
             List<ReportError> listaErrores = parser.getListaErrores();
+            List<Simbolo> listaSimbolos = parser.getListaSimbolos();
             /*for (ReportError listaErrore : listaErrores) {
                 System.out.println(listaErrore.toString());
             }*/
+            /*for (Simbolo listaSimbolo : listaSimbolos) {
+                System.out.println(listaSimbolo.getIdentificador());
+            }*/
             if (listaErrores.size()==0 && isParserGood) {
-                request.setAttribute("ID", parser.getId());               
+                request.setAttribute("ID", parser.getId());        
                /* request.setAttribute("success", 1);
                 request.setAttribute("mostrar", 1);                
                 request.setAttribute("texto", utf8EncodedString);                
                 request.getRequestDispatcher("/index.jsp").forward(request, response);*/
                //request.getRequestDispatcher("/ShowCaptcha").forward(request, response);                
-                redireccionar(request,response,1,1,utf8EncodedString);
+                redireccionar(request,response,1,1,utf8EncodedString,listaSimbolos);
             }else{
                 request.setAttribute("listaErrores", listaErrores);
-                redireccionar(request,response,0,1,utf8EncodedString);
+                redireccionar(request,response,0,1,utf8EncodedString,listaSimbolos);
             }
         }catch(Exception e){
-            System.out.println("Error -- : " + e.getMessage());            
-            redireccionar(request,response,0,1,utf8EncodedString);
-        }       
+            System.out.println("Error -- : " + e.getMessage()); 
+            e.printStackTrace();
+            redireccionar(request,response,0,1,utf8EncodedString,null);
+        }
     }
     
-    private void redireccionar(HttpServletRequest request, HttpServletResponse response, int success, int mostrar, String utf8EncodedString){
+    private void redireccionar(HttpServletRequest request, HttpServletResponse response, int success, int mostrar, String utf8EncodedString,
+            List<Simbolo> listaSimbolos){
+        request.setAttribute("listaSimbolos", listaSimbolos);
         request.setAttribute("success", success);
         request.setAttribute("mostrar", mostrar);
         request.setAttribute("texto", utf8EncodedString);              

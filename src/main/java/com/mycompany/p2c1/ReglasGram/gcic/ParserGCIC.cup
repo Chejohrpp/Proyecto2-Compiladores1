@@ -2,6 +2,7 @@
 package com.mycompany.p2c1.ReglasGram.gcic;
 import com.mycompany.p2c1.ReglasGram.Token;
 import java_cup.runtime.*;
+import com.mycompany.p2c1.ReglasGram.Funciones.FuntionsTablaSimbolos;
 import com.mycompany.p2c1.ReglasGram.gcic.symGCIC.*;
 import com.mycompany.p2c1.objetos.*;
 import java.util.ArrayList;
@@ -18,6 +19,14 @@ parser code {:
 	private String id = "id";
 	private boolean isParameterGCIC = true;
 	private HashMap<String,Token> atributos= new HashMap();
+	private FuntionsTablaSimbolos funTablaSim =  new FuntionsTablaSimbolos();	
+
+	//funciones
+	private int procesoActual= 0;
+	private String tipoVariable = null;
+	private int posicionVar = 1;
+	private List<String> listaVariablesActuales = new ArrayList<String>();
+	private String procedimientoActual = "";
 
 	public ParserGCIC(LexerGCIC lex){
 		super(lex);
@@ -106,6 +115,9 @@ parser code {:
 	public String getId(){
 		return id;
 	}
+	public List getListaSimbolos(){
+		return funTablaSim.getListaSimbolos();
+	}
 	 @Override
 	protected int error_sync_size(){
 		return 1;
@@ -184,34 +196,6 @@ parser code {:
 			default: return false;
 		}
 	}
-
-	private void agregarVariable(Token varNueva){
-		String nombreVariable = varNueva.getLexema();
-		String tipoVariable = varNueva.getNombreToken();
-		switch(tipoVariable){
-			case "int" :{
-
-			}
-			case "decimal" :{
-
-			}
-			case "dobule" :{
-
-			}
-			case "char" :{
-
-			}
-			case "boolean" :{
-
-			}
-			default : break;
-		}
-	}
-
-	private void agregarVariableGlobal(Token varNueva){
-
-	}
-
 	private void verificarAtributos(String newAtriuto, Token token){
 		if(atributos.get(newAtriuto) == null){
 			atributos.put(newAtriuto,token);
@@ -219,7 +203,6 @@ parser code {:
 			addError("Semantico",token,"Esta repetido el atributo: " + newAtriuto, "Elimine el atributos repetido");
 		}
 	}
-
 	private void verificarAtributosEtiquetas(String etiqueta, Token token){
 		switch(etiqueta){
 			case "C_GCIC":{
@@ -335,8 +318,9 @@ parser code {:
             }
                     
 		}
-
 	}
+	
+
 :}
 
 /*terminales*/
@@ -667,9 +651,7 @@ cont_body ::= 	cont_body etiqueta_para_body
 				|etiqueta_para_body
 				;
 
-etiquetas_para_body ::= etiquetas_para_body etiqueta_para_body
-					|etiqueta_para_body
-					;
+
 
 etiqueta_para_body ::= 	etq_generica
 						|etiqueta_br
@@ -802,6 +784,9 @@ funcion_on_load ::= name_on_load parentesis
 					;
 
 name_on_load ::= ON_LOAD
+					{:
+						procedimientoActual = "ON_LOAD()";
+					:}
 				;
 parentesis ::= PAI PAD
 				|error
@@ -809,10 +794,17 @@ parentesis ::= PAI PAD
 
 funcion_process_ ::= name_funcion_g parentesis
 						;
-name_funcion_g ::= NOMBRE_FUNCION
+name_funcion_g ::= NOMBRE_FUNCION:e
+						{:
+							procedimientoActual = e.getLexema() +"()";
+						:}
 					;
 
-cont_funcion ::= inicio_funcion funcion fin_funcion
+cont_funcion ::= inicio_funcion
+						{:
+							procesoActual++;
+						:}
+				 funcion fin_funcion
 					;
 
 inicio_funcion ::= CORI 
@@ -851,16 +843,21 @@ expr      ::= expr:e1 SUMA  expr:e2
              |expr:e1 BARRA90 BARRA90 expr:e2
              |expr:e1 AND_1 AND_1 expr:e2
              |ADMIRACION expr:e1
-	       	 |PAI expr:e PAD	        
-	         |MENOS ENTERO:n
-	         |MENOS DECIMAL:d
-	         |ENTERO:n
-	         |DECIMAL:d
-	         |CHAR:c
-	         |STRING:s
-	         |STRING_WS:s
-	         |BOOLEAN:b
-	         |ID_VARIABLE
+	       	 |PAI expr:e PAD {: RESULT = e;:}	        
+	         |MENOS ENTERO:e {: e.setNombreToken("ENTERO"); e.setLexema("-" + e.getLexema()); RESULT = e;:}
+	         |MENOS DECIMAL:e {: e.setNombreToken("DECIMAL");e.setLexema("-" + e.getLexema()); RESULT = e;:}
+	         |ENTERO:e {: e.setNombreToken("ENTERO"); RESULT = e;:}
+	         |DECIMAL:e {: e.setNombreToken("DECIMAL"); RESULT = e;:}
+	         |CHAR:e {: e.setNombreToken("CHAR"); RESULT = e;:}
+	         |STRING:e {: e.setNombreToken("STRING"); RESULT = e;:}
+	         |STRING_WS:e {: e.setNombreToken("STRING"); RESULT = e;:}
+	         |BOOLEAN:e {: e.setNombreToken("BOOLEAN"); RESULT = e;:}
+	         |ID_VARIABLE:e {:
+	         					if(e != null){
+	         						e.setNombreToken(funTablaSim.buscarVariableTipo(e.getLexema(),procesoActual)); 
+	         					}	         							         				
+		         				RESULT = e;
+	         				:}
 	         |error             
              ;
 
@@ -882,20 +879,41 @@ declaracion_asginacion ::= declaracion asignacion
 							;
 fin_instruccion ::= SEMI
 					;
-declaracion ::= tipo_dato modo
+declaracion ::= tipo_dato:e
+					{:
+						tipoVariable = e.getLexema();
+						listaVariablesActuales.clear();
+					:}
+				 modo
 				|nombre_variable
 				;
-tipo_dato ::= ID_INTEGER
-			|ID_DECIMAL
-			|ID_STRING
-			|ID_BOOLEAN
-			|ID_CHAR
+tipo_dato ::= ID_INTEGER:e {:RESULT = e;:}
+			|ID_DECIMAL:e {:RESULT = e;:}
+			|ID_STRING:e {:RESULT = e;:}
+			|ID_BOOLEAN:e {:RESULT = e;:}
+			|ID_CHAR:e {:RESULT = e;:}
 			;
 modo ::= GLOBAL nombre_variable
+			{:
+				for(String variable: listaVariablesActuales){
+					funTablaSim.agregarSim(variable, tipoVariable,"","GLOBAL",procesoActual,posicionVar,procedimientoActual);
+					posicionVar++;
+				}
+			:}
 		|nombre_variable
+			{:
+				for(String variable: listaVariablesActuales){
+					funTablaSim.agregarSim(variable, tipoVariable,"","-",procesoActual,posicionVar,procedimientoActual);
+					posicionVar++;
+				}
+			:}
 		|error
 		;
-nombre_variable ::= ID_VARIABLE otras_variables
+nombre_variable ::= ID_VARIABLE:e
+						{:
+							listaVariablesActuales.add(e.getLexema());
+						:}
+					 otras_variables
 					;
 otras_variables ::= otra_variable
 					|
@@ -905,7 +923,10 @@ otra_variable ::= otra_variable nombre_otra_variable
 				  ;
 nombre_otra_variable ::= COMA id_variable
 						;
-id_variable ::= ID_VARIABLE
+id_variable ::= ID_VARIABLE:e
+					{:
+						listaVariablesActuales.add(e.getLexema());
+					:}
 				|error
 				;
 asignacion ::= 	IGUAL tipos_datos fin_instruccion

@@ -63,6 +63,10 @@
 
             .inputfile:focus + #labelFile {
                     outline: 1px dotted #000;
+            }
+            .nav-link{
+                cursor: pointer;
+            }
 
         </style>
     </head>
@@ -81,7 +85,7 @@
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
                         <li><a class="dropdown-item" onclick="limpiar()">Nuevo</a></li>
-                      <li><a class="dropdown-item" href="#">Guardar</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="">Guardar</a></li>
                       <li><a class="dropdown-item" href="#">Guardar Como</a></li>
                       <li><a class="dropdown-item" href="#">
                               <form action="MostrarContBrowser" method="POST" enctype="multipart/form-data">
@@ -97,10 +101,13 @@
                     </ul>
                   </li>
                   <li class="nav-item">
-                    <a class="nav-link active" href="#">Reporte de Utilización de los Captchas</a>
+                      <a class="nav-link active" onclick="showListaSimbolos()">Tabla de simbolos</a>
                   </li>
                   <li class="nav-item">
-                    <a class="nav-link active" href="#">Listado de Todos los Captchas Generados</a>
+                    <a class="nav-link active">Reporte de Utilización de los Captchas</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link active">Listado de Todos los Captchas Generados</a>
                   </li>
                 </ul>
               </div>
@@ -119,9 +126,9 @@
                 <input type="submit" class="btn btn-primary" value="EnviarGramatica">
             </form>
             </div>
-              <c:if test="${mostrar == 1}">
-                <div class="col">
-                  <div class="row">
+              <c:if test="${mostrar == 1}">                  
+                <div class="col">             
+                  <div class="row" id="listaSimbolos">
                       <%-- Tabla Simbolos --%>
                       <table class="table table-bordered  table-hover table-sm">
                     <thead class="thead-dark">
@@ -136,16 +143,18 @@
                     </tr>
                   </thead>
                   <tbody>                      
-                 <%--<c:forEach items="${listaSimbolos}" var="sym">                          
+                 <c:forEach items="${listaSimbolos}" var="sym">                          
                           <tr>
-                            <th scope="row">${error.tipoError}</th>
-                            <td>${error.linea}</td>
-                            <td>${error.columna}</td>
-                            <td>${error.descripcion}</td>
-                            <td>${error.solucion}</td>
+                            <th scope="row">${sym.posicion}</th>
+                            <td>${sym.identificador}</td>
+                            <td>${sym.tipo}</td>
+                            <td>${sym.valor}</td>
+                            <td>${sym.modo}</td>
+                            <td>${sym.procedimiento}</td>
+                            <td>${sym.noEjecucion}</td>
                           </tr>
-                    </c:forEach>  --%>                 
-                    <tr>
+                    </c:forEach>                  
+                  <%--  <tr>
                        <th scope="row">1</th>
                        <td>Texto</td>
                        <td>String</td>
@@ -154,7 +163,7 @@
                        <td>PROCESS_write()</td>
                        <td>22</td>
                      </tr>                 
-                  </tbody>
+                  </tbody> --%>
                   
                 </table>
                     </div>
@@ -213,6 +222,16 @@
             }
           }
       </script>
+      <script>
+       function showListaSimbolos() {
+         var x = document.getElementById("listaSimbolos");
+         if (x.style.display === "none") {
+           x.style.display = "block";
+         } else {
+           x.style.display = "none";
+         }
+       }
+       </script>
       <script>
           'use strict';
 
