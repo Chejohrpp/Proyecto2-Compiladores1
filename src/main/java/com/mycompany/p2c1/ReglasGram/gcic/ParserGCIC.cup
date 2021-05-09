@@ -2,7 +2,7 @@
 package com.mycompany.p2c1.ReglasGram.gcic;
 import com.mycompany.p2c1.ReglasGram.Token;
 import java_cup.runtime.*;
-import com.mycompany.p2c1.ReglasGram.Funciones.FuntionsTablaSimbolos;
+import com.mycompany.p2c1.ReglasGram.Funciones.*;
 import com.mycompany.p2c1.ReglasGram.gcic.symGCIC.*;
 import com.mycompany.p2c1.objetos.*;
 import java.util.ArrayList;
@@ -25,8 +25,9 @@ parser code {:
 	private int procesoActual= 0;
 	private String tipoVariable = null;
 	private int posicionVar = 1;
-	private List<String> listaVariablesActuales = new ArrayList<String>();
+	private List<Token> listaVariablesActuales = new ArrayList<Token>();
 	private String procedimientoActual = "";
+	private FunctionsOLM funOLM = new FunctionsOLM();
 
 	public ParserGCIC(LexerGCIC lex){
 		super(lex);
@@ -97,9 +98,9 @@ parser code {:
             	if(!symbl_name_from_id(expected_token_id).equals("error")){
             		String nameToken = nameTokenEsperado(symbl_name_from_id(expected_token_id));
             		if (nameToken == null){
-            			tokenEsperados += "<p>"+symbl_name_from_id(expected_token_id) + "<p>";
+            			tokenEsperados += "<p>"+symbl_name_from_id(expected_token_id) + "</p>";
             		}else{
-            			tokenEsperados += "<p>"+nameToken + "<p>";
+            			tokenEsperados += "<p>"+nameToken + "</p>";
             		}            		
             	}                
             }
@@ -830,33 +831,197 @@ tipo_instruccion ::= declaracion_asginacion
 expr_list ::= expr_list expr:e       
             | expr:e               
 			;
-expr      ::= expr:e1 SUMA  expr:e2        
-             |expr:e1 MENOS expr:e2       
-             |expr:e1 MULT expr:e2
-             |expr:e1 DIAG expr:e2
-             |expr:e1 IGUALACION expr:e2
-             |expr:e1 DIFERENTE expr:e2
-             |expr:e1 MEN_QUE expr:e2
-             |expr:e1 MAY_QUE expr:e2
-             |expr:e1 MAQ expr:e2
-             |expr:e1 MENQ expr:e2
-             |expr:e1 BARRA90 BARRA90 expr:e2
-             |expr:e1 AND_1 AND_1 expr:e2
-             |ADMIRACION expr:e1
+expr      ::= expr:e1 SUMA  expr:e2 {:
+	             						if(e1 != null && e2 != null){
+		             						Token result = funOLM.suma(e1, e2);
+		             						if(result == null){
+		             							addError("Semantico",e1,
+		             							e1.getNombreToken()+" + "+ e2.getNombreToken() +" No esta definido",
+		             							e1.getNombreToken()+" + "+ e1.getNombreToken());
+		             						}else{
+		             							RESULT = result;
+		             						}
+		             					}
+             						:}       
+             |expr:e1 MENOS expr:e2	{:
+	             						if(e1 != null && e2 != null){
+		             						Token result = funOLM.resta(e1, e2);
+		             						if(result == null){
+		             							addError("Semantico",e1,
+		             							e1.getNombreToken()+" - "+ e2.getNombreToken() +" No esta definido",
+		             							e1.getNombreToken()+" - "+ e1.getNombreToken());
+		             						}else{
+		             							RESULT = result;
+		             						}
+		             					}
+             						:}       
+             |expr:e1 MULT expr:e2	{:
+	             						if(e1 != null && e2 != null){
+		             						Token result = funOLM.mult(e1, e2);
+		             						if(result == null){
+		             							addError("Semantico",e1,
+		             							e1.getNombreToken()+" * "+ e2.getNombreToken() +" No esta definido",
+		             							e1.getNombreToken()+" * "+ e1.getNombreToken());
+		             						}else{
+		             							RESULT = result;
+		             						}
+		             					}
+             						:}
+             |expr:e1 DIAG expr:e2	{:
+	             						if(e1 != null && e2 != null){
+		             						Token result = funOLM.div(e1, e2);
+		             						if(result == null){
+		             							addError("Semantico",e1,
+		             							e1.getNombreToken()+" / "+ e2.getNombreToken() +" No esta definido",
+		             							e1.getNombreToken()+" / "+ e1.getNombreToken());
+		             						}else{
+		             							RESULT = result;
+		             						}
+		             					}
+             						:}
+             |expr:e1 IGUALACION expr:e2 {:
+	             							if(e1 != null && e2 != null){
+		             							String result = funOLM.igual(e1, e2);
+		             							if(result == null){
+		             								addError("Semantico",e1,
+		             								e1.getNombreToken()+" == "+ e2.getNombreToken() +" No esta definido",
+		             								"Ambos tipos tienen que ser iguales");
+		             							}else{
+		             								e2.setNombreToken("boolean");
+		             								e2.setLexema(result);
+		             								RESULT = e2;
+		             							}
+		             						}
+             							:}
+             |expr:e1 DIFERENTE expr:e2 {:
+	             							if(e1 != null && e2 != null){
+		             							String result = funOLM.diferente(e1, e2);
+		             							if(result == null){
+		             								addError("Semantico",e1,
+		             								e1.getNombreToken()+" != "+ e2.getNombreToken() +" No esta definido",
+		             								"Ambos tipos tienen que ser iguales");
+		             							}else{
+		             								e2.setNombreToken("boolean");
+		             								e2.setLexema(result);
+		             								RESULT = e2;
+		             							}
+		             						}
+             							:}
+             |expr:e1 MEN_QUE expr:e2	{:
+	             							if(e1 != null && e2 != null){
+		             							String result = funOLM.menIgual(e1, e2);
+		             							if(result == null){
+		             								addError("Semantico",e1,
+		             								e1.getNombreToken()+" <= "+ e2.getNombreToken() +" No esta definido",
+		             								"<p>integer <= integer</p> <p>decimal <= decimal</p>");
+		             							}else{
+		             								e2.setNombreToken("boolean");
+		             								e2.setLexema(result);
+		             								RESULT = e2;
+		             							}
+		             						}
+             							:}
+             |expr:e1 MAY_QUE expr:e2 {:
+             							if(e1 != null && e2 != null){
+	             							String result = funOLM.mayIgual(e1, e2);
+	             							if(result == null){
+	             								addError("Semantico",e1,
+	             								e1.getNombreToken()+" >= "+ e2.getNombreToken() +" No esta definido",
+	             								"<p>integer >= integer</p> <p>decimal >= decimal</p>");
+	             							}else{
+	             								e2.setNombreToken("boolean");
+	             								e2.setLexema(result);
+	             								RESULT = e2;
+	             							}
+	             						}
+             						:}
+             |expr:e1 MAQ expr:e2	{:
+             							if(e1 != null && e2 != null){
+	             							String result = funOLM.mayQ(e1, e2);
+	             							if(result == null){
+	             								addError("Semantico",e1,
+	             								e1.getNombreToken()+" > "+ e2.getNombreToken() +" No esta definido",
+	             								"<p>integer > integer</p> <p>decimal > decimal</p>");
+	             							}else{
+	             								e2.setNombreToken("boolean");
+	             								e2.setLexema(result);
+	             								RESULT = e2;
+	             							}
+	             						}
+             						:}
+             |expr:e1 MENQ expr:e2 	{:
+             							if(e1 != null && e2 != null){
+	             							String result = funOLM.menQ(e1, e2);
+	             							if(result == null){
+	             								addError("Semantico",e1,
+	             								e1.getNombreToken()+" < "+ e2.getNombreToken() +" No esta definido",
+	             								"<p>integer < integer</p> <p>decimal < decimal</p>");
+	             							}else{
+	             								e2.setNombreToken("boolean");
+	             								e2.setLexema(result);
+	             								RESULT = e2;
+	             							}
+	             						}
+             						:}
+             |expr:e1 BARRA90 BARRA90 expr:e2 	{:
+	             									if(e1 != null && e2 != null){
+	             										String tipo = funOLM.or(e1, e2);
+	             										if(tipo == null){
+	             											addError("Semantico",e1,
+	             												e1.getNombreToken()+" || "+ e2.getNombreToken() +" No esta definido",
+	             												"boolean || boolean");
+	             										}else{
+	             											e2.setLexema(tipo);
+	             											RESULT = e2;
+	             										}
+	             									}
+             									:}
+             |expr:e1 AND_1 AND_1 expr:e2	{:
+             									if(e1 != null && e2 != null){
+             										String tipo = funOLM.and(e1, e2);
+             										if(tipo == null){
+             											addError("Semantico",e1,
+             												e1.getNombreToken()+" && "+ e2.getNombreToken() +" No esta definido",
+             												"boolean && boolean");
+             										}else{
+             											e2.setLexema(tipo);
+             											RESULT = e2;
+             										}
+             									}
+             								:}
+             |ADMIRACION expr:e1 {:
+             						if(e1 != null){
+             							if(e1.getNombreToken().equals("boolean")){
+             								if(e1.getLexema().equals("true")){
+             									e1.setLexema("false");
+             								}else{
+             									e1.setLexema("true");
+             								}
+	             							RESULT = e1;
+	             						}else{
+	             							addError("Semantico",e1, e1.getLexema()+" No es una variable de tipo boolean",
+	             								"Use una variable de tipo boolean");
+	             						}
+             						}
+             					:}
 	       	 |PAI expr:e PAD {: RESULT = e;:}	        
-	         |MENOS ENTERO:e {: e.setNombreToken("ENTERO"); e.setLexema("-" + e.getLexema()); RESULT = e;:}
-	         |MENOS DECIMAL:e {: e.setNombreToken("DECIMAL");e.setLexema("-" + e.getLexema()); RESULT = e;:}
-	         |ENTERO:e {: e.setNombreToken("ENTERO"); RESULT = e;:}
-	         |DECIMAL:e {: e.setNombreToken("DECIMAL"); RESULT = e;:}
-	         |CHAR:e {: e.setNombreToken("CHAR"); RESULT = e;:}
-	         |STRING:e {: e.setNombreToken("STRING"); RESULT = e;:}
-	         |STRING_WS:e {: e.setNombreToken("STRING"); RESULT = e;:}
-	         |BOOLEAN:e {: e.setNombreToken("BOOLEAN"); RESULT = e;:}
+	         |MENOS ENTERO:e {: e.setNombreToken("integer"); e.setLexema("-" + e.getLexema()); RESULT = e;:}
+	         |MENOS DECIMAL:e {: e.setNombreToken("decimal");e.setLexema("-" + e.getLexema()); RESULT = e;:}
+	         |ENTERO:e {: e.setNombreToken("integer"); RESULT = e;:}
+	         |DECIMAL:e {: e.setNombreToken("decimal"); RESULT = e;:}
+	         |CHAR:e {: e.setNombreToken("char"); RESULT = e;:}
+	         |STRING:e {: e.setNombreToken("string"); RESULT = e;:}
+	         |STRING_WS:e {: e.setNombreToken("string"); RESULT = e;:}
+	         |BOOLEAN:e {: e.setNombreToken("boolean"); RESULT = e;:}
 	         |ID_VARIABLE:e {:
-	         					if(e != null){
-	         						e.setNombreToken(funTablaSim.buscarVariableTipo(e.getLexema(),procesoActual)); 
-	         					}	         							         				
-		         				RESULT = e;
+	         					e.setNombreToken(funTablaSim.buscarVariableTipo(e.getLexema(),procesoActual));
+	         					if(e.getNombreToken() == null){
+	         						addError("Semantico",e,"La variable: " + e.getLexema( )+ " No esta definida",
+	         							"Declare la variable");
+	         					}else{
+	         						e.setLexema(funTablaSim.getValorVariable(e.getLexema(),procesoActual)); 				
+		         					RESULT = e;
+	         					}	         					
 	         				:}
 	         |error             
              ;
@@ -875,7 +1040,29 @@ fin_estruct ::= DOS_PUNTOS LLAD END
 				|error
 				;
 
-declaracion_asginacion ::= declaracion asignacion
+declaracion_asginacion ::= declaracion asignacion:e
+								{:
+									for(Token variable: listaVariablesActuales){
+										String tipo = funTablaSim.buscarVariableTipo(variable.getLexema(),procesoActual);
+										if(tipo != null){
+											if(e != null){
+												if(e.getNombreToken().equals(tipo)){
+													funTablaSim.addValor(variable.getLexema(),procesoActual,e.getLexema());
+												}else{
+													addError("Semantico",e,
+														"Tipo " + e.getNombreToken() + " No es igual al tipo de la variable: " + tipo,
+														"cambie el tipo de la variable");
+												}
+											}else{
+												funTablaSim.addValorDefecto(variable.getLexema(),procesoActual);
+											}
+
+										}else{
+											addError("Semantico",variable,"La variable: "+ variable.getLexema()+" No esta declarada",
+												"Declare la variable");
+										}									
+									}
+								:}
 							;
 fin_instruccion ::= SEMI
 					;
@@ -885,7 +1072,8 @@ declaracion ::= tipo_dato:e
 						listaVariablesActuales.clear();
 					:}
 				 modo
-				|nombre_variable
+				|{:listaVariablesActuales.clear();:}
+				nombre_variable
 				;
 tipo_dato ::= ID_INTEGER:e {:RESULT = e;:}
 			|ID_DECIMAL:e {:RESULT = e;:}
@@ -895,23 +1083,37 @@ tipo_dato ::= ID_INTEGER:e {:RESULT = e;:}
 			;
 modo ::= GLOBAL nombre_variable
 			{:
-				for(String variable: listaVariablesActuales){
-					funTablaSim.agregarSim(variable, tipoVariable,"","GLOBAL",procesoActual,posicionVar,procedimientoActual);
-					posicionVar++;
+				for(Token variable: listaVariablesActuales){
+					String nameVar = variable.getLexema(); 
+					boolean isAdd = funTablaSim.agregarSim(nameVar,tipoVariable,"","GLOBAL",procesoActual,posicionVar,procedimientoActual);
+					if(isAdd){
+						posicionVar++;
+					}else{
+						addError("Semantico",variable,"La variable " + variable.getLexema()+" ya esta definida",
+							" No declare la variable, solo asignela");
+					}
+					
 				}
 			:}
 		|nombre_variable
 			{:
-				for(String variable: listaVariablesActuales){
-					funTablaSim.agregarSim(variable, tipoVariable,"","-",procesoActual,posicionVar,procedimientoActual);
-					posicionVar++;
+				for(Token variable: listaVariablesActuales){
+					String nameVar = variable.getLexema(); 
+					boolean isAdd = funTablaSim.agregarSim(nameVar,tipoVariable,"","-",procesoActual,posicionVar,procedimientoActual);
+					if(isAdd){
+						posicionVar++;
+					}else{
+						addError("Semantico",variable,"La variable " + variable.getLexema()+" ya esta definida",
+							" No declare la variable, solo asignela");
+					}
+					
 				}
 			:}
 		|error
 		;
 nombre_variable ::= ID_VARIABLE:e
 						{:
-							listaVariablesActuales.add(e.getLexema());
+							listaVariablesActuales.add(e);
 						:}
 					 otras_variables
 					;
@@ -925,18 +1127,31 @@ nombre_otra_variable ::= COMA id_variable
 						;
 id_variable ::= ID_VARIABLE:e
 					{:
-						listaVariablesActuales.add(e.getLexema());
+						listaVariablesActuales.add(e);
 					:}
 				|error
 				;
-asignacion ::= 	IGUAL tipos_datos fin_instruccion
+asignacion ::= 	IGUAL tipos_datos:e fin_instruccion
+						{:
+							RESULT = e;
+						:}
 				|fin_instruccion
 				|error
 				;
-tipos_datos ::= expr
-				|GET_ELEMENT_BY_ID cont_element_by_id
+tipos_datos ::= expr:e
+					{:
+						RESULT = e;
+					:}
+				|GET_ELEMENT_BY_ID cont_element_by_id:e
+						{:
+							e.setLexema("getElementById(\"+e.getLexema()+\")");
+						:}
 				;
-cont_element_by_id ::= PAI ID_ELEMENT PAD
+cont_element_by_id ::= PAI ID_ELEMENT:e PAD
+								{:
+									e.setNombreToken("string");
+									RESULT = e;
+								:}
 					|error
 					;
 estruc_if ::= 	if estruc_else_if

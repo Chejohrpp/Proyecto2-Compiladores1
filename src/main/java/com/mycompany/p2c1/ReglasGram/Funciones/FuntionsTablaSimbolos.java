@@ -27,7 +27,15 @@ public class FuntionsTablaSimbolos {
             return simbol.getTipo();
         }        
 	return null;
-    } 
+    }
+    
+    public String getValorVariable(String nameVar, int procesoDeclarado){
+        Simbolo simbol = getSimProceso(nameVar,procesoDeclarado);
+        if (simbol != null) {
+            return simbol.getValor();
+        }        
+	return null;
+    }
     
     public boolean agregarSim(String identificador,String tipo, String valor, String modo, int ProcesoDecla,int poscion,String procedimiento){
         if ((getSimProceso(identificador,ProcesoDecla) == null)) {
@@ -44,6 +52,42 @@ public class FuntionsTablaSimbolos {
             return true;
         }
         return false;
+    }
+    
+    public boolean addValor(String nameVar, int proceso,String valor){
+        for (Simbolo listaSimbolo : listaSimbolos) {
+            if (listaSimbolo.getIdentificador().equals(nameVar) && (listaSimbolo.getProcesoDeclarado() == proceso || listaSimbolo.getProcesoDeclarado() == 0) ) {
+                listaSimbolo.setValor(valor);
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    public void addValorDefecto(String nameVar, int proceso){
+        for (Simbolo listaSimbolo : listaSimbolos) {
+            if (listaSimbolo.getIdentificador().equals(nameVar) && (listaSimbolo.getProcesoDeclarado() == proceso || listaSimbolo.getProcesoDeclarado() == 0) ) {
+                switch(listaSimbolo.getTipo()){
+                    case "integer": case "decimal" :{
+                        listaSimbolo.setValor("0");
+                        break;
+                    }
+                    case "char":{
+                        listaSimbolo.setValor("a");
+                        break;
+                    }
+                    case "string":{
+                        listaSimbolo.setValor("");
+                        break;
+                    }
+                    case "boolean":{
+                        listaSimbolo.setValor("true");
+                        break;
+                    }
+                    default: break;
+                }
+            }
+        }
     }
     
     public Simbolo getSim(String identificador){
