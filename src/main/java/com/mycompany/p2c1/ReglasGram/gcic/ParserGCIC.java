@@ -4198,7 +4198,8 @@ listaVariablesActuales.clear();
 		int eright = ((java_cup.runtime.Symbol)CUP$ParserGCIC$stack.peek()).right;
 		Token e = (Token)((java_cup.runtime.Symbol) CUP$ParserGCIC$stack.peek()).value;
 		
-							e.setLexema("getElementById(\"+e.getLexema()+\")");
+							e.setLexema("getElementById(\""+e.getLexema()+"\")");
+							RESULT = e;
 						
               CUP$ParserGCIC$result = parser.getSymbolFactory().newSymbol("tipos_datos",92, ((java_cup.runtime.Symbol)CUP$ParserGCIC$stack.elementAt(CUP$ParserGCIC$top-1)), ((java_cup.runtime.Symbol)CUP$ParserGCIC$stack.peek()), RESULT);
             }

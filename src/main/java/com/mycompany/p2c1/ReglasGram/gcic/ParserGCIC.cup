@@ -1144,7 +1144,8 @@ tipos_datos ::= expr:e
 					:}
 				|GET_ELEMENT_BY_ID cont_element_by_id:e
 						{:
-							e.setLexema("getElementById(\"+e.getLexema()+\")");
+							e.setLexema("getElementById(\""+e.getLexema()+"\")");
+							RESULT = e;
 						:}
 				;
 cont_element_by_id ::= PAI ID_ELEMENT:e PAD
