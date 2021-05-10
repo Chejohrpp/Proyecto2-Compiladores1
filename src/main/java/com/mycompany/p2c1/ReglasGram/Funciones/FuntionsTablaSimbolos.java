@@ -45,7 +45,7 @@ public class FuntionsTablaSimbolos {
             }else{
                 simbol.setProcesoDeclarado(ProcesoDecla);
             }            
-            simbol.setNoEjecucion(1);
+            simbol.setNoEjecucion(0);
             simbol.setPosicion(poscion);
             simbol.setProcedimiento(procedimiento);
             listaSimbolos.add(simbol);
@@ -58,6 +58,15 @@ public class FuntionsTablaSimbolos {
         for (Simbolo listaSimbolo : listaSimbolos) {
             if (listaSimbolo.getIdentificador().equals(nameVar) && (listaSimbolo.getProcesoDeclarado() == proceso || listaSimbolo.getProcesoDeclarado() == 0) ) {
                 listaSimbolo.setValor(valor);
+                return true;
+            }
+        }
+        return false;
+    }
+    public boolean addOneEjecucion(String nameVar, int proceso){
+        for (Simbolo listaSimbolo : listaSimbolos) {
+            if (listaSimbolo.getIdentificador().equals(nameVar) && (listaSimbolo.getProcesoDeclarado() == proceso || listaSimbolo.getProcesoDeclarado() == 0) ) {
+                listaSimbolo.setNoEjecucion(listaSimbolo.getNoEjecucion() + 1 );
                 return true;
             }
         }

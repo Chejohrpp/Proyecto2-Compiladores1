@@ -18,6 +18,7 @@ public class Simbolo {
     private String procedimiento;
     private int noEjecucion;
     private int procesoDeclarado;
+    private int procesoDeclaradoEstruc=0;
 
     public Simbolo(String identificador, String tipo, String valor, String modo) {
         this.identificador = identificador;

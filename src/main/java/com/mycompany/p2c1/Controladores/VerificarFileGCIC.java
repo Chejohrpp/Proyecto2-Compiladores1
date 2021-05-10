@@ -60,6 +60,7 @@ public class VerificarFileGCIC extends HttpServlet {
             }
             List<ReportError> listaErrores = parser.getListaErrores();
             List<Simbolo> listaSimbolos = parser.getListaSimbolos();
+            String codigoHTML =  parser.getCodigoHTML();
             /*for (ReportError listaErrore : listaErrores) {
                 System.out.println(listaErrore.toString());
             }*/
@@ -68,12 +69,11 @@ public class VerificarFileGCIC extends HttpServlet {
             }*/
             if (listaErrores.size()==0 && isParserGood) {
                 request.setAttribute("ID", parser.getId());        
-               /* request.setAttribute("success", 1);
-                request.setAttribute("mostrar", 1);                
-                request.setAttribute("texto", utf8EncodedString);                
-                request.getRequestDispatcher("/index.jsp").forward(request, response);*/
-               //request.getRequestDispatcher("/ShowCaptcha").forward(request, response);                
-                redireccionar(request,response,1,1,utf8EncodedString,listaSimbolos);
+//                request.setAttribute("success", 1);
+//                request.setAttribute("mostrar", 1);                
+                request.setAttribute("texto", codigoHTML);                
+                request.getRequestDispatcher("/ShowCaptcha").forward(request, response);                
+                //redireccionar(request,response,1,1,utf8EncodedString,listaSimbolos);
             }else{
                 request.setAttribute("listaErrores", listaErrores);
                 redireccionar(request,response,0,1,utf8EncodedString,listaSimbolos);
