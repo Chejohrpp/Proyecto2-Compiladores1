@@ -1095,13 +1095,13 @@ expr      ::= expr:e1 SUMA {:codigoHTML1 += " + ";:}
 	         |BOOLEAN:e {: e.setNombreToken("boolean");codigoHTML1 += e.getLexema(); RESULT = e;:}
 	         |ID_VARIABLE:e {:
 	         					codigoHTML1 += e.getLexema();
-	         					e.setNombreToken(funTablaSim.buscarVariableTipo(e.getLexema(),procesoActual));
+	         					e.setNombreToken(funTablaSim.buscarVariableTipo(e.getLexema(),procesoActual,isEstruc,procesoActualEstructura));
 	         					if(e.getNombreToken() == null){
 	         						addError("Semantico",e,"La variable: " + e.getLexema( )+ " No esta definida",
 	         							"Declare la variable");
 	         					}else{
-	         						funTablaSim.addOneEjecucion(e.getLexema(),procesoActual);
-	         						e.setLexema(funTablaSim.getValorVariable(e.getLexema(),procesoActual)); 
+	         						funTablaSim.addOneEjecucion(e.getLexema(),procesoActual,isEstruc,procesoActualEstructura);
+	         						e.setLexema(funTablaSim.getValorVariable(e.getLexema(),procesoActual,isEstruc,procesoActualEstructura)); 
 		         					RESULT = e;
 	         					}	         						         					
 	         				:}
@@ -1128,19 +1128,19 @@ declaracion_asginacion ::= declaracion asignacion:e
 								{:
 									isGlobal = false;
 									for(Token variable: listaVariablesActuales){
-										String tipo = funTablaSim.buscarVariableTipo(variable.getLexema(),procesoActual);
+										String tipo = funTablaSim.buscarVariableTipo(variable.getLexema(),procesoActual,isEstruc,procesoActualEstructura);
 										if(tipo != null){
-											funTablaSim.addOneEjecucion(variable.getLexema(),procesoActual);
+											funTablaSim.addOneEjecucion(variable.getLexema(),procesoActual,isEstruc,procesoActualEstructura);
 											if(e != null){
 												if(e.getNombreToken().equals(tipo)){
-													funTablaSim.addValor(variable.getLexema(),procesoActual,e.getLexema());
+													funTablaSim.addValor(variable.getLexema(),procesoActual,e.getLexema(),isEstruc,procesoActualEstructura);
 												}else{
 													addError("Semantico",e,
 														"Tipo " + e.getNombreToken() + " No es igual al tipo de la variable: " + tipo,
 														"cambie el tipo de la variable");
 												}
 											}else{
-												funTablaSim.addValorDefecto(variable.getLexema(),procesoActual);
+												funTablaSim.addValorDefecto(variable.getLexema(),procesoActual,isEstruc,procesoActualEstructura);
 											}
 
 										}else{
@@ -1180,7 +1180,8 @@ modo ::= GLOBAL {:isGlobal = true; codigoHTMLVarGlobal += "var ";:}
 			{:
 				for(Token variable: listaVariablesActuales){
 					String nameVar = variable.getLexema(); 
-					boolean isAdd = funTablaSim.agregarSim(nameVar,tipoVariable,"","GLOBAL",procesoActual,posicionVar,procedimientoActual);
+					boolean isAdd = funTablaSim.agregarSim(nameVar,tipoVariable,"","GLOBAL",procesoActual,posicionVar,procedimientoActual
+															,isEstruc,procesoActualEstructura);
 					if(isAdd){
 						posicionVar++;
 					}else{
@@ -1194,7 +1195,8 @@ modo ::= GLOBAL {:isGlobal = true; codigoHTMLVarGlobal += "var ";:}
 			{:
 				for(Token variable: listaVariablesActuales){
 					String nameVar = variable.getLexema(); 
-					boolean isAdd = funTablaSim.agregarSim(nameVar,tipoVariable,"","-",procesoActual,posicionVar,procedimientoActual);
+					boolean isAdd = funTablaSim.agregarSim(nameVar,tipoVariable,"","-",procesoActual,posicionVar,procedimientoActual
+															,isEstruc,procesoActualEstructura);
 					if(isAdd){
 						posicionVar++;
 					}else{
@@ -1282,9 +1284,14 @@ cont_element_by_id ::= PAI ID_ELEMENT:e PAD
 					|error
 					;
 estruc_if ::= 	if estruc_else_if
+					{:
+						isEstruc = false;
+					:}
 				;
 if ::= IF 
 			{:
+				isEstruc = true;
+				procesoActualEstructura++;
 				codigoHTML += "if (";
 			:}
 		condicion:e
@@ -1348,6 +1355,7 @@ un_else_if ::= inicio_else_if condicion:e
 				;
 inicio_else_if ::= ELSE IF
 						{:
+							procesoActualEstructura++;
 							codigoHTML += "else if (";
 						:}				
 					;
@@ -1361,6 +1369,7 @@ else ::= inicio_else instrucciones_para_if
 		;
 inicio_else ::= ELSE 
 					{:
+						procesoActualEstructura++;
 						codigoHTML += "else {\n";
 					:}
 				;
@@ -1476,6 +1485,8 @@ funciones_especiales_sin_tipo_return ::= ALERT_INFO {: codigoHTML += "alert( ";:
 
 estruc_repeat ::= REPEAT
 					{:
+						isEstruc = true;
+						procesoActualEstructura++;
 						codigoHTML += "for ( ";
 					:} 
 				asig_decla_repeat:e
@@ -1483,7 +1494,7 @@ estruc_repeat ::= REPEAT
 						codigoHTML += "; " + e.getLexema() +"  <= ";
 					:}
 				 huntil {:codigoHTML += ";  " + e.getLexema() +"++ ) {\n"; :} 
-				 instrucciones_para_if {:codigoHTML += "}\n";:}
+				 instrucciones_para_if {:codigoHTML += "}\n";isEstruc = false;:}
 				;
 asig_decla_repeat ::= PAI declaracion_asginacion_repeat:e PAD
 						{:
@@ -1495,9 +1506,9 @@ asig_decla_repeat ::= PAI declaracion_asginacion_repeat:e PAD
 declaracion_asginacion_repeat ::= declaracion_repeat:e0 asignacion_repeat:e
 									{:
 									if(e0 != null && e != null){
-										String tipo = funTablaSim.buscarVariableTipo(e0.getLexema(),procesoActual);
+										String tipo = funTablaSim.buscarVariableTipo(e0.getLexema(),procesoActual,isEstruc,procesoActualEstructura);
 										if(tipo != null){
-											funTablaSim.addOneEjecucion(e0.getLexema(),procesoActual);
+											funTablaSim.addOneEjecucion(e0.getLexema(),procesoActual,isEstruc,procesoActualEstructura);
 											if(e != null){
 												if(e.getNombreToken().equals(tipo)){
 													if(!e.getNombreToken().equals("integer") && !e.getNombreToken().equals("decimal")){
@@ -1505,7 +1516,7 @@ declaracion_asginacion_repeat ::= declaracion_repeat:e0 asignacion_repeat:e
 															"No es de tipo integer o decimal,tipo de resultado: " + e.getNombreToken(),
 															"cambie el tipo de asginacion");
 												}else{
-													funTablaSim.addValor(e0.getLexema(),procesoActual,e.getLexema());
+													funTablaSim.addValor(e0.getLexema(),procesoActual,e.getLexema(),isEstruc,procesoActualEstructura);
 												}													
 												}else{
 													addError("Semantico",e,
@@ -1513,7 +1524,7 @@ declaracion_asginacion_repeat ::= declaracion_repeat:e0 asignacion_repeat:e
 														"cambie el tipo de la variable");
 												}
 											}else{
-												funTablaSim.addValorDefecto(e0.getLexema(),procesoActual);
+												funTablaSim.addValorDefecto(e0.getLexema(),procesoActual,isEstruc,procesoActualEstructura);
 											}
 
 										}else{
@@ -1533,7 +1544,8 @@ declaracion_repeat ::= tipo_dato:e0 ID_VARIABLE:e
 								"cambie de variable");
 						}
 						String nameVar = e.getLexema(); 
-						boolean isAdd = funTablaSim.agregarSim(nameVar,e0.getLexema(),"","-",procesoActual,posicionVar,procedimientoActual);
+						boolean isAdd = funTablaSim.agregarSim(nameVar,e0.getLexema(),"","-",procesoActual,posicionVar,procedimientoActual
+																	,isEstruc,procesoActualEstructura);
 						if(isAdd){
 							posicionVar++;
 						}else{
@@ -1575,7 +1587,7 @@ huntil ::= HUNTIL condicion:e
 				:}
 			|error
 			;
-estruc_while ::= WHILE	{:codigoHTML += "while ( ";:}					
+estruc_while ::= WHILE	{:isEstruc = true;procesoActualEstructura++; codigoHTML += "while ( ";:}					
 				 condicion:e 
 				 	{:
 				 		if(e != null){
@@ -1589,6 +1601,7 @@ estruc_while ::= WHILE	{:codigoHTML += "while ( ";:}
 				  thenwhile instrucciones_para_if
 				 	{:
 				 		codigoHTML += "}\n";
+				 		isEstruc = false;
 				 	:}
 				;
 thenwhile ::= 	THENWHILE

@@ -4140,13 +4140,13 @@ codigoHTML1 += "(";
 		Token e = (Token)((java_cup.runtime.Symbol) CUP$ParserGCIC$stack.peek()).value;
 		
 	         					codigoHTML1 += e.getLexema();
-	         					e.setNombreToken(funTablaSim.buscarVariableTipo(e.getLexema(),procesoActual));
+	         					e.setNombreToken(funTablaSim.buscarVariableTipo(e.getLexema(),procesoActual,isEstruc,procesoActualEstructura));
 	         					if(e.getNombreToken() == null){
 	         						addError("Semantico",e,"La variable: " + e.getLexema( )+ " No esta definida",
 	         							"Declare la variable");
 	         					}else{
-	         						funTablaSim.addOneEjecucion(e.getLexema(),procesoActual);
-	         						e.setLexema(funTablaSim.getValorVariable(e.getLexema(),procesoActual)); 
+	         						funTablaSim.addOneEjecucion(e.getLexema(),procesoActual,isEstruc,procesoActualEstructura);
+	         						e.setLexema(funTablaSim.getValorVariable(e.getLexema(),procesoActual,isEstruc,procesoActualEstructura)); 
 		         					RESULT = e;
 	         					}	         						         					
 	         				
@@ -4269,19 +4269,19 @@ codigoHTML1 += "(";
 		
 									isGlobal = false;
 									for(Token variable: listaVariablesActuales){
-										String tipo = funTablaSim.buscarVariableTipo(variable.getLexema(),procesoActual);
+										String tipo = funTablaSim.buscarVariableTipo(variable.getLexema(),procesoActual,isEstruc,procesoActualEstructura);
 										if(tipo != null){
-											funTablaSim.addOneEjecucion(variable.getLexema(),procesoActual);
+											funTablaSim.addOneEjecucion(variable.getLexema(),procesoActual,isEstruc,procesoActualEstructura);
 											if(e != null){
 												if(e.getNombreToken().equals(tipo)){
-													funTablaSim.addValor(variable.getLexema(),procesoActual,e.getLexema());
+													funTablaSim.addValor(variable.getLexema(),procesoActual,e.getLexema(),isEstruc,procesoActualEstructura);
 												}else{
 													addError("Semantico",e,
 														"Tipo " + e.getNombreToken() + " No es igual al tipo de la variable: " + tipo,
 														"cambie el tipo de la variable");
 												}
 											}else{
-												funTablaSim.addValorDefecto(variable.getLexema(),procesoActual);
+												funTablaSim.addValorDefecto(variable.getLexema(),procesoActual,isEstruc,procesoActualEstructura);
 											}
 
 										}else{
@@ -4437,7 +4437,8 @@ isGlobal = true; codigoHTMLVarGlobal += "var ";
 		
 				for(Token variable: listaVariablesActuales){
 					String nameVar = variable.getLexema(); 
-					boolean isAdd = funTablaSim.agregarSim(nameVar,tipoVariable,"","GLOBAL",procesoActual,posicionVar,procedimientoActual);
+					boolean isAdd = funTablaSim.agregarSim(nameVar,tipoVariable,"","GLOBAL",procesoActual,posicionVar,procedimientoActual
+															,isEstruc,procesoActualEstructura);
 					if(isAdd){
 						posicionVar++;
 					}else{
@@ -4458,7 +4459,8 @@ isGlobal = true; codigoHTMLVarGlobal += "var ";
 		
 				for(Token variable: listaVariablesActuales){
 					String nameVar = variable.getLexema(); 
-					boolean isAdd = funTablaSim.agregarSim(nameVar,tipoVariable,"","-",procesoActual,posicionVar,procedimientoActual);
+					boolean isAdd = funTablaSim.agregarSim(nameVar,tipoVariable,"","-",procesoActual,posicionVar,procedimientoActual
+															,isEstruc,procesoActualEstructura);
 					if(isAdd){
 						posicionVar++;
 					}else{
@@ -4707,7 +4709,9 @@ isGlobal = true; codigoHTMLVarGlobal += "var ";
           case 248: // estruc_if ::= if estruc_else_if 
             {
               Token RESULT =null;
-
+		
+						isEstruc = false;
+					
               CUP$ParserGCIC$result = parser.getSymbolFactory().newSymbol("estruc_if",94, ((java_cup.runtime.Symbol)CUP$ParserGCIC$stack.elementAt(CUP$ParserGCIC$top-1)), ((java_cup.runtime.Symbol)CUP$ParserGCIC$stack.peek()), RESULT);
             }
           return CUP$ParserGCIC$result;
@@ -4717,6 +4721,8 @@ isGlobal = true; codigoHTMLVarGlobal += "var ";
             {
               Token RESULT =null;
 
+				isEstruc = true;
+				procesoActualEstructura++;
 				codigoHTML += "if (";
 			
               CUP$ParserGCIC$result = parser.getSymbolFactory().newSymbol("NT$25",149, ((java_cup.runtime.Symbol)CUP$ParserGCIC$stack.peek()), RESULT);
@@ -4905,6 +4911,7 @@ isGlobal = true; codigoHTMLVarGlobal += "var ";
             {
               Token RESULT =null;
 		
+							procesoActualEstructura++;
 							codigoHTML += "else if (";
 						
               CUP$ParserGCIC$result = parser.getSymbolFactory().newSymbol("inicio_else_if",102, ((java_cup.runtime.Symbol)CUP$ParserGCIC$stack.elementAt(CUP$ParserGCIC$top-1)), ((java_cup.runtime.Symbol)CUP$ParserGCIC$stack.peek()), RESULT);
@@ -4945,6 +4952,7 @@ isGlobal = true; codigoHTMLVarGlobal += "var ";
             {
               Token RESULT =null;
 		
+						procesoActualEstructura++;
 						codigoHTML += "else {\n";
 					
               CUP$ParserGCIC$result = parser.getSymbolFactory().newSymbol("inicio_else",105, ((java_cup.runtime.Symbol)CUP$ParserGCIC$stack.peek()), ((java_cup.runtime.Symbol)CUP$ParserGCIC$stack.peek()), RESULT);
@@ -5293,6 +5301,8 @@ codigoHTML1 += "(";
             {
               Token RESULT =null;
 
+						isEstruc = true;
+						procesoActualEstructura++;
 						codigoHTML += "for ( ";
 					
               CUP$ParserGCIC$result = parser.getSymbolFactory().newSymbol("NT$36",160, ((java_cup.runtime.Symbol)CUP$ParserGCIC$stack.peek()), RESULT);
@@ -5334,7 +5344,7 @@ codigoHTML += ";  " + e.getLexema() +"++ ) {\n";
 		int eleft = ((java_cup.runtime.Symbol)CUP$ParserGCIC$stack.elementAt(CUP$ParserGCIC$top-4)).left;
 		int eright = ((java_cup.runtime.Symbol)CUP$ParserGCIC$stack.elementAt(CUP$ParserGCIC$top-4)).right;
 		Token e = (Token)((java_cup.runtime.Symbol) CUP$ParserGCIC$stack.elementAt(CUP$ParserGCIC$top-4)).value;
-		codigoHTML += "}\n";
+		codigoHTML += "}\n";isEstruc = false;
               CUP$ParserGCIC$result = parser.getSymbolFactory().newSymbol("estruc_repeat",111, ((java_cup.runtime.Symbol)CUP$ParserGCIC$stack.elementAt(CUP$ParserGCIC$top-6)), ((java_cup.runtime.Symbol)CUP$ParserGCIC$stack.peek()), RESULT);
             }
           return CUP$ParserGCIC$result;
@@ -5374,9 +5384,9 @@ codigoHTML += ";  " + e.getLexema() +"++ ) {\n";
 		Token e = (Token)((java_cup.runtime.Symbol) CUP$ParserGCIC$stack.peek()).value;
 		
 									if(e0 != null && e != null){
-										String tipo = funTablaSim.buscarVariableTipo(e0.getLexema(),procesoActual);
+										String tipo = funTablaSim.buscarVariableTipo(e0.getLexema(),procesoActual,isEstruc,procesoActualEstructura);
 										if(tipo != null){
-											funTablaSim.addOneEjecucion(e0.getLexema(),procesoActual);
+											funTablaSim.addOneEjecucion(e0.getLexema(),procesoActual,isEstruc,procesoActualEstructura);
 											if(e != null){
 												if(e.getNombreToken().equals(tipo)){
 													if(!e.getNombreToken().equals("integer") && !e.getNombreToken().equals("decimal")){
@@ -5384,7 +5394,7 @@ codigoHTML += ";  " + e.getLexema() +"++ ) {\n";
 															"No es de tipo integer o decimal,tipo de resultado: " + e.getNombreToken(),
 															"cambie el tipo de asginacion");
 												}else{
-													funTablaSim.addValor(e0.getLexema(),procesoActual,e.getLexema());
+													funTablaSim.addValor(e0.getLexema(),procesoActual,e.getLexema(),isEstruc,procesoActualEstructura);
 												}													
 												}else{
 													addError("Semantico",e,
@@ -5392,7 +5402,7 @@ codigoHTML += ";  " + e.getLexema() +"++ ) {\n";
 														"cambie el tipo de la variable");
 												}
 											}else{
-												funTablaSim.addValorDefecto(e0.getLexema(),procesoActual);
+												funTablaSim.addValorDefecto(e0.getLexema(),procesoActual,isEstruc,procesoActualEstructura);
 											}
 
 										}else{
@@ -5423,7 +5433,8 @@ codigoHTML += ";  " + e.getLexema() +"++ ) {\n";
 								"cambie de variable");
 						}
 						String nameVar = e.getLexema(); 
-						boolean isAdd = funTablaSim.agregarSim(nameVar,e0.getLexema(),"","-",procesoActual,posicionVar,procedimientoActual);
+						boolean isAdd = funTablaSim.agregarSim(nameVar,e0.getLexema(),"","-",procesoActual,posicionVar,procedimientoActual
+																	,isEstruc,procesoActualEstructura);
 						if(isAdd){
 							posicionVar++;
 						}else{
@@ -5552,7 +5563,7 @@ codigoHTML += ";  " + e.getLexema() +"++ ) {\n";
           case 306: // NT$40 ::= 
             {
               Token RESULT =null;
-codigoHTML += "while ( ";
+isEstruc = true;procesoActualEstructura++; codigoHTML += "while ( ";
               CUP$ParserGCIC$result = parser.getSymbolFactory().newSymbol("NT$40",164, ((java_cup.runtime.Symbol)CUP$ParserGCIC$stack.peek()), RESULT);
             }
           return CUP$ParserGCIC$result;
@@ -5588,6 +5599,7 @@ codigoHTML += "while ( ";
 		Token e = (Token)((java_cup.runtime.Symbol) CUP$ParserGCIC$stack.elementAt(CUP$ParserGCIC$top-3)).value;
 		
 				 		codigoHTML += "}\n";
+				 		isEstruc = false;
 				 	
               CUP$ParserGCIC$result = parser.getSymbolFactory().newSymbol("estruc_while",117, ((java_cup.runtime.Symbol)CUP$ParserGCIC$stack.elementAt(CUP$ParserGCIC$top-5)), ((java_cup.runtime.Symbol)CUP$ParserGCIC$stack.peek()), RESULT);
             }

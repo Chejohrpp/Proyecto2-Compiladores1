@@ -90,6 +90,14 @@ public class Simbolo {
     public void setProcesoDeclarado(int procesoDeclarado) {
         this.procesoDeclarado = procesoDeclarado;
     }
+
+    public int getProcesoDeclaradoEstruc() {
+        return procesoDeclaradoEstruc;
+    }
+
+    public void setProcesoDeclaradoEstruc(int procesoDeclaradoEstruc) {
+        this.procesoDeclaradoEstruc = procesoDeclaradoEstruc;
+    }
     
     
 }
