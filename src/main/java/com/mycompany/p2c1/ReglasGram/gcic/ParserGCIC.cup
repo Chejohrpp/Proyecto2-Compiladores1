@@ -17,6 +17,7 @@ parser code {:
 	private String codigoHTML = "";
 	private String losEstilos = "";
 	private String id = "id";
+	private String link_salida = "";
 	private boolean isParameterGCIC = true;
 	private HashMap<String,Token> atributos= new HashMap();
 	private HashMap<String,Token> listaIdsEtiquetas= new HashMap();
@@ -30,7 +31,16 @@ parser code {:
 	private List<Token> listaVariablesActuales = new ArrayList<Token>();
 	private String procedimientoActual = "";
 	private FunctionsOLM funOLM = new FunctionsOLM();
+	private FunctionsSpecials funSpecials = new FunctionsSpecials();
 	private int cantOnLoad = 0;
+
+	//prueba para el codigoHTML
+	private List<String> listaCodigoHTML = new ArrayList<String>();
+	private String codigoHTML1 = "";
+	private String codigoHTMLVarGlobal = "";
+	private boolean isGlobal = false;
+
+	private boolean isEstruc =false;
 
 	public ParserGCIC(LexerGCIC lex){
 		super(lex);
@@ -114,7 +124,17 @@ parser code {:
 		return listaErrores;
 	}
 	public String getCodigoHTML(){
-		return codigoHTML;
+		if(listaCodigoHTML.size() == 0){
+			return codigoHTML;
+		}else{
+			String allCodeHTML = "";
+			for(String code : listaCodigoHTML){
+				allCodeHTML += code;
+			}
+			allCodeHTML += codigoHTML;
+			return allCodeHTML;
+		}
+		
 	}
 	public String getId(){
 		return id;
@@ -368,8 +388,9 @@ non terminal Token expr_list, expr,estruc_init,inicio_init,el_init,fin_estruct,i
 non terminal Token declaracion_asginacion,fin_instruccion;
 non terminal Token declaracion,tipo_dato,modo,nombre_variable,otras_variables,otra_variable,nombre_otra_variable,id_variable;
 non terminal Token asignacion,tipos_datos,cont_element_by_id;
-non terminal Token estruc_if,if,condicion,cont_estruc_if,estruc_else_if,else_if,un_else_if,inicio_else_if,estruc_else,else,inicio_else;
+non terminal Token estruc_if,if,condicion,condicion_f,cont_estruc_if,estruc_else_if,else_if,un_else_if,inicio_else_if,estruc_else,else,inicio_else;
 non terminal Token fin_instruccion_error,funciones_especiales,funciones_especiales_parametros,funciones_especiales_sin_parametros;
+non terminal Token funciones_especiales_sin_tipo_return;
 non terminal Token estruc_repeat,asig_decla_repeat,declaracion_asginacion_repeat,declaracion_repeat,asignacion_repeat,huntil;
 non terminal Token estruc_while,thenwhile;
 non terminal Token insert,estruc_cont_insert,cont_insert;
@@ -644,6 +665,11 @@ etiqueta_body ::= inicio_body:e0
 							}
 							codigoHTML += "<body "+ e.getNombreToken() +" style=\"" + losEstilos + "\" >\n";
 							verificarAtributosEtiquetas(e0.getNombreToken(),e0);
+							codigoHTML += "<script>\n";
+							codigoHTML += funSpecials.getCharRandom();
+							codigoHTML += funSpecials.getLetParNum();
+							codigoHTML += funSpecials.getLetImparNum();
+							codigoHTML += "</script>\n";
 						:}
 					;
 
@@ -773,6 +799,9 @@ etiqueta_scripting ::= inicio_scripting cierre_etiqueta
 							{:
 								cantOnLoad = 0;
 								codigoHTML += "<script>\n";
+								listaCodigoHTML.add(codigoHTML);
+								codigoHTML = "";
+								
 							:}
 						;
 inicio_scripting ::= MENQ C_SCRIPTING
@@ -780,6 +809,10 @@ inicio_scripting ::= MENQ C_SCRIPTING
 fin_etiqueta_scripting ::= pre_fin_etiq cierre_scripting
 								{:
 									codigoHTML += "</script>\n";
+									listaCodigoHTML.add(codigoHTMLVarGlobal);
+									listaCodigoHTML.add(codigoHTML);
+									codigoHTML = "";
+									codigoHTMLVarGlobal = "";
 								:}
 							|error C_SCRIPTING
 							;
@@ -863,10 +896,7 @@ tipo_instruccion ::= declaracion_asginacion
 					|insert
 					;
 
-expr_list ::= expr_list expr:e       
-            | expr:e               
-			;
-expr      ::= expr:e1 SUMA {:codigoHTML += " + ";:}
+expr      ::= expr:e1 SUMA {:codigoHTML1 += " + ";:}
 							 expr:e2 {:
 	             						if(e1 != null && e2 != null){
 		             						Token result = funOLM.suma(e1, e2);
@@ -879,7 +909,7 @@ expr      ::= expr:e1 SUMA {:codigoHTML += " + ";:}
 		             						}
 		             					}
              						:}       
-             |expr:e1 MENOS {:codigoHTML += " - ";:}
+             |expr:e1 MENOS {:codigoHTML1 += " - ";:}
              				expr:e2	{:
 	             						if(e1 != null && e2 != null){
 		             						Token result = funOLM.resta(e1, e2);
@@ -892,7 +922,7 @@ expr      ::= expr:e1 SUMA {:codigoHTML += " + ";:}
 		             						}
 		             					}
              						:}       
-             |expr:e1 MULT {:codigoHTML += " * ";:}
+             |expr:e1 MULT {:codigoHTML1 += " * ";:}
              		 expr:e2	{:
 	             						if(e1 != null && e2 != null){
 		             						Token result = funOLM.mult(e1, e2);
@@ -905,7 +935,7 @@ expr      ::= expr:e1 SUMA {:codigoHTML += " + ";:}
 		             						}
 		             					}
              						:}
-             |expr:e1 DIAG {:codigoHTML += " / ";:} 
+             |expr:e1 DIAG {:codigoHTML1 += " / ";:} 
              		 expr:e2	{:
 	             						if(e1 != null && e2 != null){
 		             						Token result = funOLM.div(e1, e2);
@@ -918,7 +948,7 @@ expr      ::= expr:e1 SUMA {:codigoHTML += " + ";:}
 		             						}
 		             					}
              						:}
-             |expr:e1 IGUALACION {:codigoHTML += " == ";:} 
+             |expr:e1 IGUALACION {:codigoHTML1 += " == ";:} 
              				expr:e2 {:
 	             							if(e1 != null && e2 != null){
 		             							String result = funOLM.igual(e1, e2);
@@ -933,7 +963,7 @@ expr      ::= expr:e1 SUMA {:codigoHTML += " + ";:}
 		             							}
 		             						}
              							:}
-             |expr:e1 DIFERENTE {:codigoHTML += " !== ";:}
+             |expr:e1 DIFERENTE {:codigoHTML1 += " !== ";:}
              				 expr:e2 {:
 	             							if(e1 != null && e2 != null){
 		             							String result = funOLM.diferente(e1, e2);
@@ -948,7 +978,7 @@ expr      ::= expr:e1 SUMA {:codigoHTML += " + ";:}
 		             							}
 		             						}
              							:}
-             |expr:e1 MEN_QUE {:codigoHTML += " <= ";:}
+             |expr:e1 MEN_QUE {:codigoHTML1 += " <= ";:}
              				 expr:e2	{:
 	             							if(e1 != null && e2 != null){
 		             							String result = funOLM.menIgual(e1, e2);
@@ -963,7 +993,7 @@ expr      ::= expr:e1 SUMA {:codigoHTML += " + ";:}
 		             							}
 		             						}
              							:}
-             |expr:e1 MAY_QUE {:codigoHTML += " >= ";:}
+             |expr:e1 MAY_QUE {:codigoHTML1 += " >= ";:}
              			 expr:e2 {:
              							if(e1 != null && e2 != null){
 	             							String result = funOLM.mayIgual(e1, e2);
@@ -978,7 +1008,7 @@ expr      ::= expr:e1 SUMA {:codigoHTML += " + ";:}
 	             							}
 	             						}
              						:}
-             |expr:e1 MAQ {:codigoHTML += " > ";:}
+             |expr:e1 MAQ {:codigoHTML1 += " > ";:}
              			 expr:e2	{:
              							if(e1 != null && e2 != null){
 	             							String result = funOLM.mayQ(e1, e2);
@@ -993,7 +1023,7 @@ expr      ::= expr:e1 SUMA {:codigoHTML += " + ";:}
 	             							}
 	             						}
              						:}
-             |expr:e1 MENQ {:codigoHTML += " < ";:} 
+             |expr:e1 MENQ {:codigoHTML1 += " < ";:} 
              			expr:e2 	{:
              							if(e1 != null && e2 != null){
 	             							String result = funOLM.menQ(e1, e2);
@@ -1008,7 +1038,7 @@ expr      ::= expr:e1 SUMA {:codigoHTML += " + ";:}
 	             							}
 	             						}
              						:}
-             |expr:e1 BARRA90 BARRA90 {:codigoHTML += " || ";:}
+             |expr:e1 BARRA90 BARRA90 {:codigoHTML1 += " || ";:}
              				 expr:e2 	{:
 	             									if(e1 != null && e2 != null){
 	             										String tipo = funOLM.or(e1, e2);
@@ -1022,7 +1052,7 @@ expr      ::= expr:e1 SUMA {:codigoHTML += " + ";:}
 	             										}
 	             									}
              									:}
-             |expr:e1 AND_1 AND_1 {:codigoHTML += " && ";:}
+             |expr:e1 AND_1 AND_1 {:codigoHTML1 += " && ";:}
              				 expr:e2	{:
              									if(e1 != null && e2 != null){
              										String tipo = funOLM.and(e1, e2);
@@ -1036,7 +1066,7 @@ expr      ::= expr:e1 SUMA {:codigoHTML += " + ";:}
              										}
              									}
              								:}
-             |ADMIRACION {:codigoHTML += "!";:}
+             |ADMIRACION {:codigoHTML1 += "!";:}
              		 expr:e1 {:
              						if(e1 != null){
              							if(e1.getNombreToken().equals("boolean")){
@@ -1053,18 +1083,18 @@ expr      ::= expr:e1 SUMA {:codigoHTML += " + ";:}
              						}
              					:}
 	       	 |PAI
-	       	 	{:codigoHTML += "(";:}
-	       	 	 expr:e PAD {:codigoHTML += ")"; RESULT = e;:}	        
-	         |MENOS ENTERO:e {:e.setNombreToken("integer"); e.setLexema("-" + e.getLexema());codigoHTML += e.getLexema(); RESULT = e;:}
-	         |MENOS DECIMAL:e {: e.setNombreToken("decimal");e.setLexema("-" + e.getLexema());codigoHTML += e.getLexema(); RESULT = e;:}
-	         |ENTERO:e {: e.setNombreToken("integer");codigoHTML += e.getLexema(); RESULT = e;:}
-	         |DECIMAL:e {: e.setNombreToken("decimal");codigoHTML += e.getLexema(); RESULT = e;:}
-	         |CHAR:e {: e.setNombreToken("char");codigoHTML += e.getLexema(); RESULT = e;:}
-	         |STRING:e {: e.setNombreToken("string");codigoHTML += "\""+e.getLexema()+"\""; RESULT = e;:}
-	         |STRING_WS:e {: e.setNombreToken("string");codigoHTML += "\""+e.getLexema()+"\""; RESULT = e;:}
-	         |BOOLEAN:e {: e.setNombreToken("boolean");codigoHTML += e.getLexema(); RESULT = e;:}
+	       	 	{:codigoHTML1 += "(";:}
+	       	 	 expr:e PAD {:codigoHTML1 += ")"; RESULT = e;:}	        
+	         |MENOS ENTERO:e {:e.setNombreToken("integer"); e.setLexema("-" + e.getLexema());codigoHTML1 += e.getLexema(); RESULT = e;:}
+	         |MENOS DECIMAL:e {: e.setNombreToken("decimal");e.setLexema("-" + e.getLexema());codigoHTML1 += e.getLexema(); RESULT = e;:}
+	         |ENTERO:e {: e.setNombreToken("integer");codigoHTML1 += e.getLexema(); RESULT = e;:}
+	         |DECIMAL:e {: e.setNombreToken("decimal");codigoHTML1 += e.getLexema(); RESULT = e;:}
+	         |CHAR:e {: e.setNombreToken("char");codigoHTML1 += "\""+e.getLexema()+"\""; RESULT = e;:}
+	         |STRING:e {: e.setNombreToken("string");codigoHTML1 += "\""+e.getLexema()+"\""; RESULT = e;:}
+	         |STRING_WS:e {: e.setNombreToken("string");codigoHTML1 += "\""+e.getLexema()+"\""; RESULT = e;:}
+	         |BOOLEAN:e {: e.setNombreToken("boolean");codigoHTML1 += e.getLexema(); RESULT = e;:}
 	         |ID_VARIABLE:e {:
-	         					codigoHTML += e.getLexema();
+	         					codigoHTML1 += e.getLexema();
 	         					e.setNombreToken(funTablaSim.buscarVariableTipo(e.getLexema(),procesoActual));
 	         					if(e.getNombreToken() == null){
 	         						addError("Semantico",e,"La variable: " + e.getLexema( )+ " No esta definida",
@@ -1075,6 +1105,8 @@ expr      ::= expr:e1 SUMA {:codigoHTML += " + ";:}
 		         					RESULT = e;
 	         					}	         						         					
 	         				:}
+	         |funciones_especiales_parametros:e {:RESULT = e;:}
+			 |funciones_especiales_sin_parametros:e {:RESULT = e;:}
 	         |error             
              ;
 
@@ -1094,6 +1126,7 @@ fin_estruct ::= DOS_PUNTOS LLAD END
 
 declaracion_asginacion ::= declaracion asignacion:e
 								{:
+									isGlobal = false;
 									for(Token variable: listaVariablesActuales){
 										String tipo = funTablaSim.buscarVariableTipo(variable.getLexema(),procesoActual);
 										if(tipo != null){
@@ -1119,7 +1152,12 @@ declaracion_asginacion ::= declaracion asignacion:e
 							;
 fin_instruccion ::= SEMI
 						{:
-							codigoHTML += " ;\n ";
+							if(isGlobal){
+								codigoHTMLVarGlobal += " ;\n ";
+							}else{
+								codigoHTML += " ;\n ";
+							}
+							
 						:}
 					;
 declaracion ::= tipo_dato:e
@@ -1131,13 +1169,14 @@ declaracion ::= tipo_dato:e
 				|{:listaVariablesActuales.clear();:}
 				nombre_variable
 				;
-tipo_dato ::= ID_INTEGER:e {:codigoHTML += "var "; RESULT = e;:}
-			|ID_DECIMAL:e {:codigoHTML += "var "; RESULT = e;:}
-			|ID_STRING:e {:codigoHTML += "var "; RESULT = e;:}
-			|ID_BOOLEAN:e {:codigoHTML += "var "; RESULT = e;:}
-			|ID_CHAR:e {:codigoHTML += "var "; RESULT = e;:}
+tipo_dato ::= ID_INTEGER:e {: RESULT = e;:}
+			|ID_DECIMAL:e {: RESULT = e;:}
+			|ID_STRING:e {: RESULT = e;:}
+			|ID_BOOLEAN:e {: RESULT = e;:}
+			|ID_CHAR:e {: RESULT = e;:}
 			;
-modo ::= GLOBAL nombre_variable
+modo ::= GLOBAL {:isGlobal = true; codigoHTMLVarGlobal += "var ";:}
+		 nombre_variable
 			{:
 				for(Token variable: listaVariablesActuales){
 					String nameVar = variable.getLexema(); 
@@ -1170,7 +1209,12 @@ modo ::= GLOBAL nombre_variable
 nombre_variable ::= ID_VARIABLE:e
 						{:
 							listaVariablesActuales.add(e);
-							codigoHTML += e.getLexema()+ " ";
+							if(isGlobal){
+								codigoHTMLVarGlobal += e.getLexema()+ " ";
+							}else{
+								codigoHTML += e.getLexema()+ " ";
+							}
+							
 						:}
 					 otras_variables
 					;
@@ -1185,11 +1229,21 @@ nombre_otra_variable ::= COMA id_variable
 id_variable ::= ID_VARIABLE:e
 					{:
 						listaVariablesActuales.add(e);
-						codigoHTML += ", " + e.getLexema();
+						if(isGlobal){
+							codigoHTMLVarGlobal += ", " + e.getLexema();
+						}else{
+							codigoHTML += ", " + e.getLexema();
+						}						
 					:}
 				|error
 				;
-asignacion ::= 	IGUAL {:codigoHTML += " = ";:}
+asignacion ::= 	IGUAL {:
+						if(isGlobal){
+							codigoHTMLVarGlobal += " = ";
+						}else{
+							codigoHTML += " = ";
+						}						
+					:}
 				 tipos_datos:e fin_instruccion
 						{:
 							RESULT = e;
@@ -1199,12 +1253,22 @@ asignacion ::= 	IGUAL {:codigoHTML += " = ";:}
 				;
 tipos_datos ::= expr:e
 					{:
+						if(isGlobal){
+							codigoHTMLVarGlobal +=  codigoHTML1;
+						}else{
+							codigoHTML += codigoHTML1;
+						}
+						codigoHTML1 = "";
 						RESULT = e;
 					:}
 				|GET_ELEMENT_BY_ID cont_element_by_id:e
 						{:
 							if(e != null){
-								codigoHTML += "document.getElementById(\""+e.getLexema()+"\")";
+								if(isGlobal){
+									codigoHTMLVarGlobal += "document.getElementById(\""+e.getLexema()+"\")";
+								}else{
+									codigoHTML += "document.getElementById(\""+e.getLexema()+"\")";
+								}								
 								e.setLexema("getElementById(\""+e.getLexema()+"\")");							
 								RESULT = e;
 							}
@@ -1240,10 +1304,23 @@ if ::= IF
 		;
 condicion ::= 	PAI expr:e PAD
 					{:
+						if(isGlobal){
+							codigoHTMLVarGlobal += codigoHTML1;
+						}else{
+							codigoHTML += codigoHTML1;
+						}
+						codigoHTML1 = "";
 						RESULT = e;
 					:}
 				|error
 				;
+condicion_f ::= PAI expr:e PAD
+					{:
+						RESULT = e;
+					:}
+				|error
+				;
+
 cont_estruc_if ::= 	THEN instrucciones_para_if
 					|error
 					;
@@ -1288,26 +1365,112 @@ inicio_else ::= ELSE
 					:}
 				;
 fin_instruccion_error ::= SEMI
+							{:
+								codigoHTML += ";\n";
+							:}
 						|error
 						;
 
-funciones_especiales ::= 	funciones_especiales_parametros fin_instruccion_error
-							|funciones_especiales_sin_parametros fin_instruccion_error
+funciones_especiales ::= 	funciones_especiales_parametros{:codigoHTML += codigoHTML1; codigoHTML1 = "";:}	fin_instruccion_error
+							|funciones_especiales_sin_parametros{:codigoHTML += codigoHTML1; codigoHTML1 = "";:} fin_instruccion_error
+							|funciones_especiales_sin_tipo_return fin_instruccion_error
 							;
-funciones_especiales_parametros ::= ASC condicion
-									|DESC condicion
-									|LETPAR_NUM condicion
-									|LETIMPAR_NUM condicion
-									|REVERSE condicion
-									|ALERT_INFO {: codigoHTML += "ALERT_INFO ( ";:}
-										 condicion {:codigoHTML += " );\n";:}
+funciones_especiales_parametros ::= ASC:e0 {:codigoHTML1 += "(";:}
+										condicion_f:e {:
+														codigoHTML1 += ").split('').sort().join('')";
+														if(e != null){
+															e0.setLexema(e0.getLexema() + "( " + e.getLexema() + ")");
+															if(!e.getNombreToken().equals("string")){
+																addError("Semantico",e,"No es de tipo string, tipo dado: " + e.getNombreToken(),
+																	"Cambie a tipo string");
+															}
+														}													
+														e0.setNombreToken("string");														
+														RESULT = e0;
+													:}
+									|DESC:e0  {:codigoHTML1 += "( (";:}
+										condicion_f:e
+											{:
+												codigoHTML1 += ").split('').sort().join('') ).split(\"\").reverse().join(\"\")";
+												if(e != null){
+														e0.setLexema(e0.getLexema() + "( " + e.getLexema() + ")");
+														if(!e.getNombreToken().equals("string")){
+															addError("Semantico",e,"No es de tipo string, tipo dado: " + e.getNombreToken(),
+																"Cambie a tipo string");
+														}
+													}													
+												e0.setNombreToken("string");														
+												RESULT = e0;
+											:}
+									|LETPAR_NUM:e0 {:codigoHTML1 += "letParNum(";:}
+										condicion_f:e
+												{:
+													codigoHTML1 += ")";
+													if(e != null){
+															e0.setLexema(e0.getLexema() + "( " + e.getLexema() + ")");
+															if(!e.getNombreToken().equals("string")){
+																addError("Semantico",e,"No es de tipo string, tipo dado: " + e.getNombreToken(),
+																	"Cambie a tipo string");
+															}
+														}													
+													e0.setNombreToken("string");														
+													RESULT = e0;
+												:}
+									|LETIMPAR_NUM:e0 {:codigoHTML1 += "letImparNum(";:}
+											condicion_f:e
+													{:
+														codigoHTML1 += ")";
+														if(e != null){
+															e0.setLexema(e0.getLexema() + "( " + e.getLexema() + ")");
+															if(!e.getNombreToken().equals("string")){
+																addError("Semantico",e,"No es de tipo string, tipo dado: " + e.getNombreToken(),
+																	"Cambie a tipo string");
+															}
+														}													
+														e0.setNombreToken("string");														
+														RESULT = e0;
+													:}
+									|REVERSE:e0 {:codigoHTML1 += "(";:}
+										 condicion_f:e 
+										 	{:
+										 		codigoHTML1 += ").split(\"\").reverse().join(\"\")";
+										 		if(e != null){
+															e0.setLexema(e0.getLexema() + "( " + e.getLexema() + ")");
+															if(!e.getNombreToken().equals("string")){
+																addError("Semantico",e,"No es de tipo string, tipo dado: " + e.getNombreToken(),
+																	"Cambie a tipo string");
+															}
+														}													
+												e0.setNombreToken("string");														
+												RESULT = e0;
+										 	:}
+									
 									;
 
-funciones_especiales_sin_parametros ::= CARACTER_ALEATORIO parentesis 
-										|NUM_ALEATORIO parentesis
-										|EXIT parentesis
+funciones_especiales_sin_parametros ::= CARACTER_ALEATORIO:e parentesis 
 											{:
-												codigoHTML += "EXIT();\n";
+												codigoHTML1 += "charRandom()";
+												e.setNombreToken("char");
+												int valorDado =(int) Math.floor(Math.random()*25+65);
+												e.setLexema(Character.toString(valorDado));
+												RESULT = e;
+											:}
+										|NUM_ALEATORIO:e parentesis
+											{:
+												//declaraciones en bloques de estructura
+												e.setNombreToken("integer");
+												int valorDado =(int) Math.floor(Math.random()*10+1);
+												e.setLexema(String.valueOf(valorDado));
+												RESULT = e;
+												codigoHTML1 += "Math.floor(Math.random() * 10)";
+											:}
+										
+										;
+funciones_especiales_sin_tipo_return ::= ALERT_INFO {: codigoHTML += "alert( ";:}
+										 	condicion {:codigoHTML += " )";:}
+										 |EXIT parentesis
+											{:
+												codigoHTML += "return";
 											:}
 										;
 
@@ -1321,7 +1484,6 @@ estruc_repeat ::= REPEAT
 					:}
 				 huntil {:codigoHTML += ";  " + e.getLexema() +"++ ) {\n"; :} 
 				 instrucciones_para_if {:codigoHTML += "}\n";:}
-					}
 				;
 asig_decla_repeat ::= PAI declaracion_asginacion_repeat:e PAD
 						{:
@@ -1380,7 +1542,7 @@ declaracion_repeat ::= tipo_dato:e0 ID_VARIABLE:e
 						}					
 					}
 					RESULT = e;
-					codigoHTML += e.getLexema();
+					codigoHTML += "var " + e.getLexema();
 				:}
 						|ID_VARIABLE:e
 							{:
@@ -1394,6 +1556,8 @@ asignacion_repeat ::= 	IGUAL
 								:}
 						 expr:e
 								{:
+									codigoHTML += codigoHTML1;
+									codigoHTML1 = "";
 									RESULT = e;
 								:}
 						|error
@@ -1444,10 +1608,6 @@ cont_insert ::=	cont_insert COMA cont_insert
 				|ID_VARIABLE
 				|error
 				;
-
-instrucciones ::= 	estruc_init
-					|tipo_instruccion
-					;
 instrucciones_para_if ::= estruc_init
 						|insert
 						|funciones_especiales
