@@ -4,11 +4,16 @@ import com.mycompany.p2c1.ReglasGram.Token;
 import java_cup.runtime.*;
 import com.mycompany.p2c1.ReglasGram.Funciones.*;
 import com.mycompany.p2c1.ReglasGram.gcic.symGCIC.*;
+import com.mycompany.p2c1.ReglasGram.insert.*;
 import com.mycompany.p2c1.objetos.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Set;
+import java.io.BufferedReader;
+import java.nio.charset.StandardCharsets;
+import java.io.Reader;
+import java.io.StringReader;
 
 parser code {:
 
@@ -1267,9 +1272,9 @@ tipos_datos ::= expr:e
 						{:
 							if(e != null){
 								if(isGlobal){
-									codigoHTMLVarGlobal += "document.getElementById(\""+e.getLexema()+"\")";
+									codigoHTMLVarGlobal += "document.getElementById(\""+e.getLexema()+"\").value";
 								}else{
-									codigoHTML += "document.getElementById(\""+e.getLexema()+"\")";
+									codigoHTML += "document.getElementById(\""+e.getLexema()+"\").value";
 								}								
 								e.setLexema("getElementById(\""+e.getLexema()+"\")");							
 								RESULT = e;
@@ -1466,7 +1471,6 @@ funciones_especiales_sin_parametros ::= CARACTER_ALEATORIO:e parentesis
 											:}
 										|NUM_ALEATORIO:e parentesis
 											{:
-												//declaraciones en bloques de estructura
 												e.setNombreToken("integer");
 												int valorDado =(int) Math.floor(Math.random()*10+1);
 												e.setLexema(String.valueOf(valorDado));
@@ -1610,15 +1614,60 @@ thenwhile ::= 	THENWHILE
 					:}
 				|error
 				;
-insert ::= INSERT estruc_cont_insert fin_instruccion_error
+insert ::= INSERT
+				{:
+					codigoHTML += "document.write(";
+				:} 
+				estruc_cont_insert
+					{:
+						codigoHTML += ")";
+					:}
+				 fin_instruccion_error
+					}
 			;
 estruc_cont_insert ::= 	PAI cont_insert PAD
 						|error
 						;
 
-cont_insert ::=	cont_insert COMA cont_insert
-				|ID_ELEMENT
-				|ID_VARIABLE
+cont_insert ::=	cont_insert COMA {:codigoHTML += ",";:}
+					 cont_insert
+				|ID_ELEMENT:e
+					{:
+						String codeH = "";
+						String texto = e.getLexema();
+						byte[] bytes = texto.getBytes(StandardCharsets.UTF_8);
+        				String utf8EncodedString = new String(bytes, StandardCharsets.UTF_8);
+        				try{
+        					boolean isParserGood = false;
+				            Reader inputString = new StringReader(utf8EncodedString);
+				            BufferedReader reader = new BufferedReader(inputString);
+				            LexerInsert lexer = new LexerInsert(reader);
+				            ParserInsert parser = new ParserInsert(lexer);
+				            try{
+				                parser.parse();
+				                isParserGood= true;
+				            }catch(Exception q){
+				               //q.printStackTrace();
+				            }
+				            List<ReportError> listaErrores = parser.getListaErrores();
+				           /* for (ReportError listaErrore : listaErrores) {
+				                System.out.println(listaErrore.toString());
+				            } */
+				            if (listaErrores.size()==0 && isParserGood) {
+				            	codeH = parser.getCodigoHTML();
+				            }else{
+				            	codeH = e.getLexema();
+				            }
+        				}catch(Exception q){
+        					//q.printStackTrace();
+        					codeH = e.getLexema();
+        				}
+        				codigoHTML += "\""+codeH+"\"";
+					:}
+				|ID_VARIABLE:e
+					{:
+						codigoHTML += e.getLexema();
+					:}
 				|error
 				;
 instrucciones_para_if ::= estruc_init

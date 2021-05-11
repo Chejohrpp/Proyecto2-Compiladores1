@@ -45,7 +45,7 @@ public class VerificarFileGCIC extends HttpServlet {
         request.setCharacterEncoding("UTF-8");
         String texto = request.getParameter("txt");
         byte[] bytes = texto.getBytes(StandardCharsets.UTF_8);
-        String utf8EncodedString = new String(bytes, StandardCharsets.UTF_8);;        
+        String utf8EncodedString = new String(bytes, StandardCharsets.UTF_8);        
         try{
             boolean isParserGood = false;
             Reader inputString = new StringReader(utf8EncodedString);
@@ -71,9 +71,9 @@ public class VerificarFileGCIC extends HttpServlet {
                 request.setAttribute("ID", parser.getId());        
 //                request.setAttribute("success", 1);
 //                request.setAttribute("mostrar", 1);                
-                //request.setAttribute("texto", codigoHTML);                
-                //request.getRequestDispatcher("/ShowCaptcha").forward(request, response);                
-                redireccionar(request,response,1,1,utf8EncodedString,listaSimbolos);
+                request.setAttribute("texto", codigoHTML);                
+                request.getRequestDispatcher("/ShowCaptcha").forward(request, response);                
+                //redireccionar(request,response,1,1,utf8EncodedString,listaSimbolos);
             }else{
                 request.setAttribute("listaErrores", listaErrores);
                 redireccionar(request,response,0,1,utf8EncodedString,listaSimbolos);
