@@ -104,10 +104,14 @@
                       <a class="nav-link active" onclick="showListaSimbolos()">Tabla de simbolos</a>
                   </li>
                   <li class="nav-item">
-                    <a class="nav-link active">Reporte de Utilización de los Captchas</a>
+                      <form id="form1" action="ReportCaptcha" method="post">
+                        <a class="nav-link active" href="javascript:;" onclick="document.getElementById('form1').submit();">Reporte de Utilización de los Captchas</a>
+                    </form>                                            
                   </li>
                   <li class="nav-item">
-                    <a class="nav-link active">Listado de Todos los Captchas Generados</a>
+                      <form id="formLista" action="ListaCaptcha" method="post">
+                        <a class="nav-link active" href="javascript:;" onclick="document.getElementById('formLista').submit();">Listado de Todos los Captchas Generados</a>
+                    </form>
                   </li>
                 </ul>
               </div>

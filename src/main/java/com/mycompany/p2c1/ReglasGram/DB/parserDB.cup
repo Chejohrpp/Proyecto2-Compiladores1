@@ -1,0 +1,225 @@
+/*codigo de usuario*/
+package com.mycompany.p2c1.ReglasGram.DB;
+import com.mycompany.p2c1.ReglasGram.Token;
+import java_cup.runtime.*;
+import com.mycompany.p2c1.ReglasGram.Funciones.*;
+import com.mycompany.p2c1.ReglasGram.DB.symDB.*;
+import com.mycompany.p2c1.objetos.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.HashMap;
+import java.util.Set;
+
+parser code {:
+
+	private List<ReportError> listaErrores;
+	private List<Captcha> listaCaptchas =  new ArrayList<Captcha>();
+	private List<Simbolo> listaSimbolo = new ArrayList<Simbolo>();
+
+	public ParserDB(LexerDB lex){
+		super(lex);
+		listaErrores = new ArrayList<ReportError>();
+	}
+	 @Override
+	public void syntax_error(Symbol cur_token){
+			Token token = (Token) cur_token.value;
+			String nombreSimbolo = symbl_name_from_id(cur_token.sym);
+			if(nombreSimbolo.equals("INVALID")){
+				addError("Lexico",token,"No se esperaba: " + token.getLexema(),null);
+			}else{
+				addError("Sintactico",token,"No se esperaba: " + nombreSimbolo,null);
+			}		
+
+	}
+	 @Override
+	public void report_fatal_error(String message, Object info){
+			String Elerror = "Ocurrio un error no recuperable al analizar: " + message + " -> {objeto: " + info + "}";
+
+			if(info instanceof Symbol ){
+				Symbol sim = (Symbol) info;
+				Token token = (Token) sim.value;
+				addError("Sintactico",token,message,null);
+			}else{
+				System.out.println("Error -- :  " + message);
+			}
+	}
+	 @Override
+	public void report_error(String message, Object info){
+			System.out.println("Error desde el report_error: " + message);
+	}
+	 @Override
+	public void unrecovered_syntax_error(Symbol cur_token){
+		report_fatal_error("No se puede reparar y analizar el Error sintactico", cur_token);
+	}
+
+	private void addError(String tipoError, Token token,String descError, String solucion){
+			ReportError reporte = new ReportError();
+			reporte.setTipoError(tipoError);
+			reporte.setColumna(token.getColumna());
+			reporte.setLinea(token.getLinea());
+			if (solucion == null) {
+                reporte.setSolucion(listTokensEsperados());
+            }else{
+                reporte.setSolucion(solucion);
+            }
+			reporte.setDescripcion(descError);
+			listaErrores.add(reporte);
+
+	}
+	private String listTokensEsperados(){
+		String tokenEsperados = "";
+		for (Integer expected_token_id : expected_token_ids()) {
+            	if(!symbl_name_from_id(expected_token_id).equals("error")){
+            		//String nameToken = nameTokenEsperado(symbl_name_from_id(expected_token_id));
+            		String nameToken = symbl_name_from_id(expected_token_id);
+            		if (nameToken == null){
+            			tokenEsperados += "<p>"+symbl_name_from_id(expected_token_id) + "</p>";
+            		}else{
+            			tokenEsperados += "<p>"+nameToken + "</p>";
+            		}            		
+            	}                
+            }
+        return tokenEsperados;
+	}
+
+	public List getListaErrores(){
+		return listaErrores;
+	}
+	 @Override
+	protected int error_sync_size(){
+		return 1;
+	}
+
+	public List getListCaptchas(){
+		return listaCaptchas;
+	}
+
+:}
+
+/*terminales*/
+terminal Token CAPTCHAS, DOS_PUNTOS, PAI, PAD;
+terminal Token CAPTCHA,LLAI,LLAD,ID, IGUAL, STRING,SEMI;
+terminal Token CODIGO_HTML,LINK,NOMBRE_CAPTCHA,CANT_UTILIZADOS,ACIERTOS,FALLOS,LAST_FECHA,SIMBOLOS;
+terminal Token POSICION,IDENTIFICADOR,TIPO,VALOR,MODO,PROCEDIMIENTO,N_E,P_D,P_D_E;
+terminal Token INVALID;
+
+/*no terminales*/
+non terminal Token inicio,sig_inicio,captchas,captcha,sig_captcha,cont_captcha,fin_instruccion;
+non terminal Token id,html,link,nombre_captcha,cant_u,aciertos,fallos,l_fecha,simbolos,cont_simbolos_lambda,cont_simbolos;
+non terminal Token simbolo,cont_sim,pos,iden,tipo,valor,modo,process,n_e,p_d,p_d_e;
+
+
+/*precedencia*/
+
+/*gramatica*/
+
+inicio ::= CAPTCHAS sig_inicio
+			;
+sig_inicio ::= DOS_PUNTOS PAI captchas PAD
+				|error
+				;
+
+captchas ::= 	captchas captcha
+				|captcha
+				;
+
+captcha ::= CAPTCHA sig_captcha
+			;
+
+sig_captcha ::= DOS_PUNTOS LLAI cont_captcha LLAD
+				|error
+				;
+
+cont_captcha ::= id:i html:html link:li nombre_captcha:nC cant_u:cU aciertos:a fallos:f l_fecha:lF simbolos
+						{:
+							String id = i.getLexema();
+							String codigoHTML = html.getLexema();
+							String link = li.getLexema();
+							String nombreCaptcha = nC.getLexema();
+							String cant_u = cU.getLexema();
+							String aciertos = a.getLexema();
+							String fallos = f.getLexema();
+							String fecha = lF.getLexema();
+							Captcha nuevo = new Captcha(id,codigoHTML,link,nombreCaptcha,listaSimbolo);
+							nuevo.setCantUtilizados(Integer.valueOf(cant_u));
+							nuevo.setCantAciertos(Integer.valueOf(aciertos));
+							nuevo.setCantFallos(Integer.valueOf(fallos));
+							nuevo.setLastFecha(fecha);
+							listaCaptchas.add(nuevo);
+							listaSimbolo = new ArrayList<Simbolo>();
+							
+						:}
+				;
+fin_instruccion ::= SEMI
+					|error
+					;
+
+id ::= ID IGUAL STRING:e fin_instruccion {:RESULT = e;:} ;
+
+html ::= CODIGO_HTML IGUAL STRING:e fin_instruccion {:RESULT = e;:} ;
+
+link ::= LINK IGUAL STRING:e fin_instruccion {:RESULT = e;:} ;
+
+nombre_captcha ::= NOMBRE_CAPTCHA IGUAL STRING:e fin_instruccion {:RESULT = e;:} ;
+
+cant_u ::= CANT_UTILIZADOS IGUAL STRING:e fin_instruccion {:RESULT = e;:} ;
+
+aciertos ::= ACIERTOS IGUAL STRING:e fin_instruccion {:RESULT = e;:} ;
+
+fallos ::= FALLOS IGUAL STRING:e fin_instruccion {:RESULT = e;:} ;
+
+l_fecha ::= LAST_FECHA IGUAL STRING:e fin_instruccion {:RESULT = e;:} ;
+
+simbolos ::= SIMBOLOS IGUAL PAI cont_simbolos_lambda PAD
+			|error
+			;
+
+cont_simbolos_lambda ::= cont_simbolos
+						|
+						;
+
+cont_simbolos ::= 	cont_simbolos simbolo
+					|simbolo
+					;
+simbolo ::= LLAI cont_sim LLAD
+			|error
+			;
+cont_sim ::= pos:p iden:i tipo:t valor:v modo:m process:pro n_e:nE p_d:pD p_d_e:pDE
+				{:
+					int posicion = Integer.valueOf(p.getLexema());
+					String ident = i.getLexema();
+					String tipo = t.getLexema();
+					String valor = v.getLexema();
+					String modo = m.getLexema();
+					String procedimiento = pro.getLexema();
+					int noEjecucion = Integer.valueOf(nE.getLexema());
+					int procesoDeclarado = Integer.valueOf(pD.getLexema());
+					int procesoDeclaradoEstruc = Integer.valueOf(pDE.getLexema());
+					Simbolo simbol = new Simbolo(ident, tipo,valor,modo);
+					simbol.setPosicion(posicion);
+					simbol.setProcedimiento(procedimiento);
+					simbol.setNoEjecucion(noEjecucion);
+					simbol.setProcesoDeclarado(procesoDeclarado);
+					simbol.setProcesoDeclaradoEstruc(procesoDeclaradoEstruc);
+					listaSimbolo.add(simbol);
+
+				:}
+				;
+
+pos ::= POSICION IGUAL STRING:e fin_instruccion {:RESULT = e;:} ;
+iden ::= IDENTIFICADOR IGUAL STRING:e fin_instruccion {:RESULT = e;:} ;
+tipo ::= TIPO IGUAL STRING:e fin_instruccion {:RESULT = e;:} ;
+valor ::= VALOR IGUAL STRING:e fin_instruccion {:RESULT = e;:} ;
+modo ::= MODO IGUAL STRING:e fin_instruccion {:RESULT = e;:} ;
+process ::= PROCEDIMIENTO IGUAL STRING:e fin_instruccion {:RESULT = e;:} ;
+n_e ::= N_E IGUAL STRING:e fin_instruccion {:RESULT = e;:} ;
+p_d ::= P_D IGUAL STRING:e fin_instruccion {:RESULT = e;:} ;
+p_d_e ::= P_D_E IGUAL STRING:e fin_instruccion {:RESULT = e;:} ;
+
+
+
+
+
+
+
+

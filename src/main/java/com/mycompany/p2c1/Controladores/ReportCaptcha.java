@@ -9,10 +9,6 @@ import com.mycompany.p2c1.Almacenamiento;
 import com.mycompany.p2c1.objetos.Captcha;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -24,10 +20,9 @@ import javax.servlet.http.HttpServletResponse;
  *
  * @author sergi
  */
-@WebServlet(name = "ShowCaptcha", urlPatterns = {"/ShowCaptcha"})
-public class ShowCaptcha extends HttpServlet {
+@WebServlet(name = "ReportCaptcha", urlPatterns = {"/ReportCaptcha"})
+public class ReportCaptcha extends HttpServlet {
     private Almacenamiento almacenamiento = new Almacenamiento();
-
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
      * methods.
@@ -45,10 +40,10 @@ public class ShowCaptcha extends HttpServlet {
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
-            out.println("<title>Captcha no Encontrado</title>");            
+            out.println("<title>Servlet ReportCaptcha</title>");            
             out.println("</head>");
             out.println("<body>");
-            out.println("<h1>No se encontro el captcha " + request.getParameter("id") + "</h1>");
+            out.println("<h1>Servlet ReportCaptcha at " + request.getContextPath() + "</h1>");
             out.println("</body>");
             out.println("</html>");
         }
@@ -66,29 +61,7 @@ public class ShowCaptcha extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String id = request.getParameter("id");
-        List<Captcha> lista = almacenamiento.getListCaptchas();
-        boolean isEncontrado =  false;
-        for (Captcha captcha : lista) {
-            if (captcha.getId().equals(id)) {
-                isEncontrado = true;
-                response.setContentType("text/html;charset=UTF-8");
-                try (PrintWriter out = response.getWriter()) {
-                    out.println("<!DOCTYPE html>");
-                    out.print(captcha.getCodigoHTML());
-                }
-                captcha.setCantUtilizados(captcha.getCantUtilizados() + 1);
-                Date date = Calendar.getInstance().getTime();  
-                DateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss"); 
-                String strDate = dateFormat.format(date);  
-                captcha.setLastFecha(strDate);
-                almacenamiento.setListCaptchas(lista);
-                break;
-            }
-        }
-        if (isEncontrado ==  false) {
-            processRequest(request,response);
-        }
+        processRequest(request, response);
     }
 
     /**
@@ -102,12 +75,9 @@ public class ShowCaptcha extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String html = (String) request.getAttribute("texto");        
-        response.setContentType("text/html;charset=UTF-8");
-        try (PrintWriter out = response.getWriter()) {
-            out.println("<!DOCTYPE html>");
-            out.print(html);
-        }
+        List<Captcha> lista = almacenamiento.getListCaptchas();
+        request.setAttribute("lista", lista);
+        request.getRequestDispatcher("/reportCaptcha.jsp").forward(request, response);
     }
 
     /**

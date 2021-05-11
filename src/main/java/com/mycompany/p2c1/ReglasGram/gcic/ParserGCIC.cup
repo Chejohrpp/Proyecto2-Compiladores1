@@ -22,8 +22,10 @@ parser code {:
 	private String codigoHTML = "";
 	private String losEstilos = "";
 	private String id = "id";
-	private String link_salida = "";
+	private String link_salida = "#";
+	private String nombre_captcha = "";
 	private boolean isParameterGCIC = true;
+	private boolean isParameterLINK = false;
 	private HashMap<String,Token> atributos= new HashMap();
 	private HashMap<String,Token> listaIdsEtiquetas= new HashMap();
 	private FuntionsTablaSimbolos funTablaSim =  new FuntionsTablaSimbolos();	
@@ -143,6 +145,12 @@ parser code {:
 	}
 	public String getId(){
 		return id;
+	}
+	public String getLinkSalida(){
+		return link_salida;
+	}
+	public String getNombreCaptcha(){
+		return nombre_captcha;
 	}
 	public List getListaSimbolos(){
 		return funTablaSim.getListaSimbolos();
@@ -462,6 +470,11 @@ parametro_etiqueta ::= inicio_param_etiq:e1 string:e2 fin_param_etiq
 							{:
 								if(id==null){
 									id = e2.getLexema();
+								}else if(nombre_captcha == null){
+									nombre_captcha = e2.getLexema();
+								}
+								if(isParameterLINK && link_salida == null){
+									link_salida = e2.getLexema();
 								}
 								if(e1.getLexema().equals("id")){
 									verificarIds(e1,e2);
@@ -481,6 +494,13 @@ inicio_param_etiq ::=	CORI PARAMETRO:e IGUAL
 								if(isParameterGCIC){
 									if(e.getLexema().equals("id")){
 										id = null;
+									} else if(e.getLexema().equals("name")){
+										nombre_captcha = null;
+									}
+								}
+								if(isParameterLINK){
+									if(e.getLexema().equals("href")){
+										link_salida =  null;
 									}
 								}
 								if(isParametrosCss(e.getLexema())){
@@ -555,11 +575,13 @@ link ::= etiqueta_link fin_etiqueta_link
 		;
 etiqueta_link ::= 	inicio_link:e
 							{:
+								isParameterLINK = true;
 								atributos.clear();
 							:}
 					 parametros_etiquetas
 							{:
 								verificarAtributosEtiquetas(e.getNombreToken(),e);
+								isParameterLINK = false;
 							:}
 					;
 inicio_link ::= MENQ C_LINK:e

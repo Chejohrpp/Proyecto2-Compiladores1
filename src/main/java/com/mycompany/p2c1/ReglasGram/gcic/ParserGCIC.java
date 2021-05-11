@@ -1203,8 +1203,10 @@ public class ParserGCIC extends java_cup.runtime.lr_parser {
 	private String codigoHTML = "";
 	private String losEstilos = "";
 	private String id = "id";
-	private String link_salida = "";
+	private String link_salida = "#";
+	private String nombre_captcha = "";
 	private boolean isParameterGCIC = true;
+	private boolean isParameterLINK = false;
 	private HashMap<String,Token> atributos= new HashMap();
 	private HashMap<String,Token> listaIdsEtiquetas= new HashMap();
 	private FuntionsTablaSimbolos funTablaSim =  new FuntionsTablaSimbolos();	
@@ -1324,6 +1326,12 @@ public class ParserGCIC extends java_cup.runtime.lr_parser {
 	}
 	public String getId(){
 		return id;
+	}
+	public String getLinkSalida(){
+		return link_salida;
+	}
+	public String getNombreCaptcha(){
+		return nombre_captcha;
 	}
 	public List getListaSimbolos(){
 		return funTablaSim.getListaSimbolos();
@@ -1716,6 +1724,11 @@ class CUP$ParserGCIC$actions {
 		
 								if(id==null){
 									id = e2.getLexema();
+								}else if(nombre_captcha == null){
+									nombre_captcha = e2.getLexema();
+								}
+								if(isParameterLINK && link_salida == null){
+									link_salida = e2.getLexema();
 								}
 								if(e1.getLexema().equals("id")){
 									verificarIds(e1,e2);
@@ -1743,6 +1756,13 @@ class CUP$ParserGCIC$actions {
 								if(isParameterGCIC){
 									if(e.getLexema().equals("id")){
 										id = null;
+									} else if(e.getLexema().equals("name")){
+										nombre_captcha = null;
+									}
+								}
+								if(isParameterLINK){
+									if(e.getLexema().equals("href")){
+										link_salida =  null;
 									}
 								}
 								if(isParametrosCss(e.getLexema())){
@@ -2028,6 +2048,7 @@ class CUP$ParserGCIC$actions {
 		int eright = ((java_cup.runtime.Symbol)CUP$ParserGCIC$stack.peek()).right;
 		Token e = (Token)((java_cup.runtime.Symbol) CUP$ParserGCIC$stack.peek()).value;
 
+								isParameterLINK = true;
 								atributos.clear();
 							
               CUP$ParserGCIC$result = parser.getSymbolFactory().newSymbol("NT$0",124, ((java_cup.runtime.Symbol)CUP$ParserGCIC$stack.peek()), RESULT);
@@ -2045,6 +2066,7 @@ class CUP$ParserGCIC$actions {
 		Token e = (Token)((java_cup.runtime.Symbol) CUP$ParserGCIC$stack.elementAt(CUP$ParserGCIC$top-2)).value;
 		
 								verificarAtributosEtiquetas(e.getNombreToken(),e);
+								isParameterLINK = false;
 							
               CUP$ParserGCIC$result = parser.getSymbolFactory().newSymbol("etiqueta_link",19, ((java_cup.runtime.Symbol)CUP$ParserGCIC$stack.elementAt(CUP$ParserGCIC$top-2)), ((java_cup.runtime.Symbol)CUP$ParserGCIC$stack.peek()), RESULT);
             }

@@ -5,8 +5,10 @@
  */
 package com.mycompany.p2c1.Controladores;
 
+import com.mycompany.p2c1.Almacenamiento;
 import com.mycompany.p2c1.ReglasGram.gcic.LexerGCIC;
 import com.mycompany.p2c1.ReglasGram.gcic.ParserGCIC;
+import com.mycompany.p2c1.objetos.Captcha;
 import com.mycompany.p2c1.objetos.ReportError;
 import com.mycompany.p2c1.objetos.Simbolo;
 import java.io.BufferedReader;
@@ -58,9 +60,12 @@ public class VerificarFileGCIC extends HttpServlet {
             }catch(Exception e){
                 e.printStackTrace();
             }
-            List<ReportError> listaErrores = parser.getListaErrores();
-            List<Simbolo> listaSimbolos = parser.getListaSimbolos();
+            List<ReportError> listaErrores = parser.getListaErrores();            
+            String id = parser.getId();
             String codigoHTML =  parser.getCodigoHTML();
+            String linkSalida = parser.getLinkSalida();
+            String nombreCapt = parser.getNombreCaptcha();
+            List<Simbolo> listaSimbolos = parser.getListaSimbolos();
             /*for (ReportError listaErrore : listaErrores) {
                 System.out.println(listaErrore.toString());
             }*/
@@ -68,12 +73,26 @@ public class VerificarFileGCIC extends HttpServlet {
                 System.out.println(listaSimbolo.getIdentificador());
             }*/
             if (listaErrores.size()==0 && isParserGood) {
-                request.setAttribute("ID", parser.getId());        
-//                request.setAttribute("success", 1);
-//                request.setAttribute("mostrar", 1);                
-                request.setAttribute("texto", codigoHTML);                
-                request.getRequestDispatcher("/ShowCaptcha").forward(request, response);                
-                //redireccionar(request,response,1,1,utf8EncodedString,listaSimbolos);
+                Almacenamiento almacenamiento =  new Almacenamiento();                
+                List<Captcha> lista = almacenamiento.getListCaptchas();
+                for (Captcha captcha : lista) {
+                    if (captcha.getId().equals(id)) {
+                        ReportError report = new ReportError("Semantico",0,0,"El id de la etiqueta C_GCIC esta repetido en la base de datos","Cambie el id de la etiqueta C_GCIC");
+                        listaErrores.add(report);
+                        request.setAttribute("listaErrores", listaErrores);
+                        redireccionar(request,response,0,1,utf8EncodedString,listaSimbolos);
+                        break;
+                    }
+                }
+                if(listaErrores.size()==0){
+                    Captcha nuevo = new Captcha(id,codigoHTML,linkSalida,nombreCapt,listaSimbolos);
+                    lista.add(nuevo);
+                    almacenamiento.setListCaptchas(lista);
+                    request.setAttribute("ID", id);  
+                    redireccionar(request,response,1,1,utf8EncodedString,listaSimbolos);
+                }                             
+//                request.setAttribute("texto", codigoHTML);                
+//                request.getRequestDispatcher("/ShowCaptcha").forward(request, response);   
             }else{
                 request.setAttribute("listaErrores", listaErrores);
                 redireccionar(request,response,0,1,utf8EncodedString,listaSimbolos);
@@ -86,7 +105,7 @@ public class VerificarFileGCIC extends HttpServlet {
     }
     
     private void redireccionar(HttpServletRequest request, HttpServletResponse response, int success, int mostrar, String utf8EncodedString,
-            List<Simbolo> listaSimbolos){
+            List<Simbolo> listaSimbolos){        
         request.setAttribute("listaSimbolos", listaSimbolos);
         request.setAttribute("success", success);
         request.setAttribute("mostrar", mostrar);
