@@ -550,6 +550,7 @@ inicio_head ::= MENQ C_HEAD
 				;
 fin_etiqueta_head ::= 	pre_fin_etiq cierre_head
 							{:
+								codigoHTML += "<link rel=\"stylesheet\" href=\"estilos/default.css\">\n";								
 								codigoHTML += "</head>\n";
 							:}
 						|error C_HEAD

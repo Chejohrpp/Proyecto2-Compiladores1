@@ -1,0 +1,70 @@
+@import url('https://fonts.googleapis.com/css2?family=Lexend&display=swap');
+
+body{
+  font-size:1.6rem;
+  width: 800px;
+    height: 500px;
+    background: white;
+    color: black;
+    top: 26%;
+    left: 50%;
+    position: absolute;
+    transform: translate(-50%,-50%);
+    box-sizing: border-box;
+    padding: 80px 40px;
+}
+span,label,p,img{
+  display:block;
+  text-align:center;
+  margin-bottom:2rem;
+}
+input, button,textarea,select{
+  font-size:1.2rem;
+  margin-left:12em;
+  display:block;
+  border-radius: 5px;
+  margin-bottom:2rem;
+}
+
+button{
+  margin-left:17.3rem;
+}
+h1,h2,h3{
+  text-aling:center;
+  margin-bottom:2rem;
+  display:block;
+}
+select,button{
+    margin-bottom: 30px;
+    font-size: 22px;
+    display:block;
+}
+select{
+    height: 47px;
+    font-size: 26px;
+    margin-left:9em;
+    
+}
+input[type="radio"],input[type="checkbox"]{
+    margin-bottom: 30px;
+    font-size: 22px;  
+}
+textarea{
+	margin-left:12em;
+    width:12.6em;
+    
+}
+img{
+	margin-left:12em;
+}
+
+button {
+  background-color:  #e7e7e7; /* gris */
+  border: none;
+  color: black;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  font-size: 16px;
+  cursor: pointer;
+}

@@ -50,7 +50,7 @@ public class FuntionsTablaSimbolos {
             simbol.setPosicion(poscion);
             simbol.setProcedimiento(procedimiento);
             if (isEstruc) {
-                System.out.println("Esta en una estructura: " + identificador);
+                //System.out.println("Esta en una estructura: " + identificador);
                 simbol.setProcesoDeclaradoEstruc(processEstruc);
             }else{
                 simbol.setProcesoDeclaradoEstruc(-1);

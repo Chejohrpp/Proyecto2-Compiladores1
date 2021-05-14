@@ -1935,6 +1935,7 @@ class CUP$ParserGCIC$actions {
             {
               Token RESULT =null;
 		
+								codigoHTML += "<link rel=\"stylesheet\" href=\"estilos/default.css\">\n";								
 								codigoHTML += "</head>\n";
 							
               CUP$ParserGCIC$result = parser.getSymbolFactory().newSymbol("fin_etiqueta_head",16, ((java_cup.runtime.Symbol)CUP$ParserGCIC$stack.elementAt(CUP$ParserGCIC$top-1)), ((java_cup.runtime.Symbol)CUP$ParserGCIC$stack.peek()), RESULT);
