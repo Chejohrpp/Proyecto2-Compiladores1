@@ -10,34 +10,35 @@ public class symGCIC {
   /* terminals */
   public static final int INVALID = 55;
   public static final int C_P = 28;
-  public static final int ID_INTEGER = 66;
+  public static final int ID_INTEGER = 67;
   public static final int SEMI = 39;
   public static final int ASC = 56;
-  public static final int ID_ELEMENT = 80;
+  public static final int ID_ELEMENT = 81;
   public static final int MEN_QUE = 48;
-  public static final int ID_CHAR = 70;
-  public static final int INIT = 74;
+  public static final int ID_CHAR = 71;
+  public static final int INIT = 75;
   public static final int C_GCIC = 3;
   public static final int DIFERENTE = 50;
   public static final int LETIMPAR_NUM = 59;
   public static final int PARAMETRO = 5;
   public static final int C_LINK = 13;
   public static final int C_OPTION = 22;
-  public static final int THENWHILE = 79;
+  public static final int THENWHILE = 80;
   public static final int C_SPAM = 18;
-  public static final int THEN = 73;
+  public static final int THEN = 74;
   public static final int DOS_PUNTOS = 36;
-  public static final int ID_DECIMAL = 69;
-  public static final int ID_BOOLEAN = 68;
+  public static final int ID_DECIMAL = 70;
+  public static final int ID_BOOLEAN = 69;
   public static final int C_BODY = 17;
   public static final int C_TEXTAREA = 20;
   public static final int REVERSE = 60;
   public static final int ALERT_INFO = 63;
   public static final int C_DIV = 23;
   public static final int C_HEAD = 12;
+  public static final int REDIRECT = 65;
   public static final int COMA = 37;
   public static final int NUM_ALEATORIO = 62;
-  public static final int HUNTIL = 77;
+  public static final int HUNTIL = 78;
   public static final int ENTERO = 52;
   public static final int C_SCRIPTING = 29;
   public static final int MAY_QUE = 49;
@@ -46,7 +47,7 @@ public class symGCIC {
   public static final int GET_ELEMENT_BY_ID = 46;
   public static final int IGUAL = 6;
   public static final int BARRA90 = 40;
-  public static final int WHILE = 78;
+  public static final int WHILE = 79;
   public static final int DECIMAL = 53;
   public static final int CHAR = 51;
   public static final int BOOLEAN = 54;
@@ -55,7 +56,7 @@ public class symGCIC {
   public static final int MULT = 44;
   public static final int CORI = 4;
   public static final int PAD = 33;
-  public static final int ELSE = 72;
+  public static final int ELSE = 73;
   public static final int MENOS = 43;
   public static final int CORD = 9;
   public static final int MAQ = 10;
@@ -64,26 +65,26 @@ public class symGCIC {
   public static final int SUMA = 42;
   public static final int C_TITLE = 14;
   public static final int LLAI = 34;
-  public static final int REPEAT = 76;
+  public static final int REPEAT = 77;
   public static final int LLAD = 35;
   public static final int C_IMG = 24;
   public static final int NOMBRE_FUNCION = 31;
   public static final int error = 1;
   public static final int EXIT = 64;
   public static final int MENQ = 2;
-  public static final int IF = 71;
+  public static final int IF = 72;
   public static final int DESC = 57;
   public static final int IGUALACION = 47;
   public static final int ON_LOAD = 30;
   public static final int C_SELECT = 21;
-  public static final int END = 75;
+  public static final int END = 76;
   public static final int STRING_TOTAL = 15;
   public static final int C_H1 = 27;
   public static final int ID_VARIABLE = 16;
-  public static final int GLOBAL = 65;
+  public static final int GLOBAL = 66;
   public static final int CARACTER_ALEATORIO = 61;
   public static final int INSERT = 45;
-  public static final int ID_STRING = 67;
+  public static final int ID_STRING = 68;
   public static final int STRING = 7;
   public static final int C_BUTTON = 26;
   public static final int ADMIRACION = 38;
@@ -155,6 +156,7 @@ public class symGCIC {
   "NUM_ALEATORIO",
   "ALERT_INFO",
   "EXIT",
+  "REDIRECT",
   "GLOBAL",
   "ID_INTEGER",
   "ID_STRING",

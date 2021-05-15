@@ -85,8 +85,6 @@
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
                         <li><a class="dropdown-item" onclick="limpiar()">Nuevo</a></li>
-                        <li><a class="dropdown-item" href="#" onclick="">Guardar</a></li>
-                      <li><a class="dropdown-item" href="#">Guardar Como</a></li>
                       <li><a class="dropdown-item" href="#">
                               <form action="MostrarContBrowser" method="POST" enctype="multipart/form-data">
                                 <div class="box">
@@ -127,7 +125,7 @@
                     ${texto}
                 </textarea>
                 <pre></pre>
-                <input type="submit" class="btn btn-primary" value="EnviarGramatica">
+                <input type="submit" class="btn btn-primary" value="Enviar Gramatica">
             </form>
             </div>
               <c:if test="${mostrar == 1}">                  

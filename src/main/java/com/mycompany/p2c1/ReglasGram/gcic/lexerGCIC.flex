@@ -111,6 +111,7 @@ whiteSpace     = {lineTerminator} | [ \t\f]
 <YYINITIAL> "NUM_ALEATORIO"		{return new Symbol(NUM_ALEATORIO,yyline+1,yycolumn+1, new Token(yytext(),yyline+1,yycolumn+1 )); }
 <YYINITIAL> "ALERT_INFO"		{return new Symbol(ALERT_INFO,yyline+1,yycolumn+1, new Token(yytext(),yyline+1,yycolumn+1 )); }
 <YYINITIAL> "EXIT"				{return new Symbol(EXIT,yyline+1,yycolumn+1, new Token(yytext(),yyline+1,yycolumn+1 )); }
+<YYINITIAL> "REDIRECT"			{return new Symbol(REDIRECT,yyline+1,yycolumn+1, new Token(yytext(),yyline+1,yycolumn+1 )); }
 
 <YYINITIAL> "@global"			{return new Symbol(GLOBAL,yyline+1,yycolumn+1, new Token(yytext(),yyline+1,yycolumn+1 )); }
 

@@ -67,7 +67,13 @@ parser code {:
 			if(nombreSimbolo.equals("INVALID")){
 				addError("Lexico",token,"No se esperaba: " + token.getLexema(),null);
 			}else{
-				addError("Sintactico",token,"No se esperaba: " + token.getLexema(),null);
+				if(token != null){
+					addError("Sintactico",token,"No se esperaba: " + token.getLexema(),null);
+				}else{
+					token = new Token(nombreSimbolo,cur_token.left,cur_token.right);
+					addError("Sintactico",token,"No se esperaba: " + nombreSimbolo,null);
+				}
+				
 			}		
 
 	}
@@ -99,6 +105,7 @@ parser code {:
 	}
 
 	private void addError(String tipoError, Token token,String descError, String solucion){
+		try{
 			ReportError reporte = new ReportError();
 			reporte.setTipoError(tipoError);
 			reporte.setColumna(token.getColumna());
@@ -110,6 +117,9 @@ parser code {:
             }
 			reporte.setDescripcion(descError);
 			listaErrores.add(reporte);
+		}catch(Exception q){
+
+		}
 
 	}
 	private String listTokensEsperados(){
@@ -379,7 +389,7 @@ terminal Token DOS_PUNTOS,COMA,ADMIRACION,SEMI,BARRA90,AND_1;
 terminal Token SUMA, MENOS, MULT,INSERT,GET_ELEMENT_BY_ID,IGUALACION,MEN_QUE,MAY_QUE,DIFERENTE;
 terminal Token CHAR,ENTERO,DECIMAL,BOOLEAN,INVALID;
 terminal Token ASC,DESC,LETPAR_NUM,LETIMPAR_NUM,REVERSE,CARACTER_ALEATORIO,NUM_ALEATORIO;
-terminal Token ALERT_INFO,EXIT,GLOBAL,ID_INTEGER,ID_STRING,ID_BOOLEAN,ID_DECIMAL,ID_CHAR;
+terminal Token ALERT_INFO,EXIT,REDIRECT,GLOBAL,ID_INTEGER,ID_STRING,ID_BOOLEAN,ID_DECIMAL,ID_CHAR;
 terminal Token IF,ELSE,THEN,INIT,END,REPEAT,HUNTIL,WHILE;
 terminal Token THENWHILE, ID_ELEMENT;
 
@@ -468,21 +478,25 @@ varios_parametro_etiqueta ::=  varios_parametro_etiqueta:e parametro_etiqueta:e1
 
 parametro_etiqueta ::= inicio_param_etiq:e1 string:e2 fin_param_etiq
 							{:
-								if(id==null){
-									id = e2.getLexema();
-								}else if(nombre_captcha == null){
-									nombre_captcha = e2.getLexema();
-								}
-								if(isParameterLINK && link_salida == null){
-									link_salida = e2.getLexema();
-								}
-								if(e1.getLexema().equals("id")){
-									verificarIds(e1,e2);
-								}
-								if(isParametrosCss(e1.getLexema())){
-									losEstilos += e2.getLexema() + ";";
-								}else{
-									e1.setNombreToken(e1.getNombreToken() + e2.getLexema() + "\"");
+								try{
+									if(id==null){
+										id = e2.getLexema();
+									}else if(nombre_captcha == null){
+										nombre_captcha = e2.getLexema();
+									}
+									if(isParameterLINK && link_salida == null){
+										link_salida = e2.getLexema();
+									}
+									if(e1.getLexema().equals("id")){
+										verificarIds(e1,e2);
+									}
+									if(isParametrosCss(e1.getLexema())){
+										losEstilos += e2.getLexema() + ";";
+									}else{
+										e1.setNombreToken(e1.getNombreToken() + e2.getLexema() + "\"");
+									}
+								}catch(Exception q){
+
 								}
 								RESULT = e1;
 							:}
@@ -1507,6 +1521,10 @@ funciones_especiales_sin_tipo_return ::= ALERT_INFO {: codigoHTML += "alert( ";:
 										 |EXIT parentesis
 											{:
 												codigoHTML += "return";
+											:}
+										| REDIRECT parentesis
+											{:
+												codigoHTML += "location.replace(\" "+link_salida+" \")";
 											:}
 										;
 
